@@ -1,8 +1,12 @@
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'game',
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        parent: 'game',
+        width: '100%',
+        height: '100%',
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -25,65 +29,79 @@ let obstacles;
 let gyroEnabled = false;
 
 function preload() {
-    // No preload needed for shapes
+    // Load the levels data
+    this.load.json('levels', 'data/levels.json');
 }
 
 let activeControl = localStorage.getItem('controlType') || 'keyboard';
-let joystick = null;
 let isDragging = false;
 let dragStartPos = null;
 let dragCurrentPos = null;
-const joystickRadius = 50; // Maximum distance the joystick can move
+let joystickRadius = Math.min(window.innerWidth, window.innerHeight) * 0.05; // 10% of smaller dimension
+
+let gameWidth;
+let gameHeight;
+
+function repositionGameObjects() {
+    if (!ball) return;
+
+    // Keep ball's relative position when resizing
+    const relativeX = ball.x / gameWidth;
+    const relativeY = ball.y / gameHeight;
+    ball.x = gameWidth * relativeX;
+    ball.y = gameHeight * relativeY;
+
+    // Adjust joystick radius based on screen size
+    joystickRadius = Math.min(gameWidth, gameHeight) * 0.1; // 10% of smaller dimension
+
+    // If you have a fixed joystick position, update it
+    if (activeControl === 'mouse' && dragStartPos) {
+        // Example: keep joystick in bottom-left corner
+        dragStartPos.x = gameWidth * 0.2;
+        dragStartPos.y = gameHeight * 0.8;
+    }
+
+    // Reposition other game objects similarly
+    coins.getChildren().forEach((coin, index, total) => {
+        const relX = coin.x / gameWidth;
+        const relY = coin.y / gameHeight;
+        coin.x = gameWidth * relX;
+        coin.y = gameHeight * relY;
+    });
+
+    obstacles.getChildren().forEach((obstacle) => {
+        const relX = obstacle.x / gameWidth;
+        const relY = obstacle.y / gameHeight;
+        // Also scale obstacle size
+        const relWidth = obstacle.width / gameWidth;
+        const relHeight = obstacle.height / gameHeight;
+        
+        obstacle.x = gameWidth * relX;
+        obstacle.y = gameHeight * relY;
+        obstacle.width = gameWidth * relWidth;
+        obstacle.height = gameHeight * relHeight;
+    });
+}
 
 function create() {
-    // Create player ball
-    ball = this.add.circle(400, 300, 15, 0xff0000);
-    this.physics.add.existing(ball);
-    ball.body.setCollideWorldBounds(true);
+    // Get initial game dimensions
+    gameWidth = this.scale.width;
+    gameHeight = this.scale.height;
 
-    // Initialize coins group
-    coins = this.add.group();
+    // Add resize listener
+    this.scale.on('resize', (gameSize) => {
+        gameWidth = gameSize.width;
+        gameHeight = gameSize.height;
+        
+        // Adjust game objects positions
+        repositionGameObjects.call(this);
+    });
+
+    // Get the levels data
+    levelsData = this.cache.json.get('levels');
     
-    // Create coins manually
-    for (let i = 0; i < 5; i++) {
-        const coin = this.add.circle(100 + (i * 100), 100, 10, 0xffff00);
-        this.physics.add.existing(coin);
-        coins.add(coin);
-    }
-
-    // Initialize obstacles group
-    obstacles = this.add.group();
-    
-    // Create obstacles manually
-    const obstacle1 = this.add.rectangle(200, 200, 100, 20, 0x0000ff);
-    const obstacle2 = this.add.rectangle(400, 400, 20, 100, 0x0000ff);
-    const obstacle3 = this.add.rectangle(600, 300, 100, 20, 0x0000ff);
-    
-    // Add physics to obstacles
-    this.physics.add.existing(obstacle1, true);
-    this.physics.add.existing(obstacle2, true);
-    this.physics.add.existing(obstacle3, true);
-    
-    // Add obstacles to group
-    obstacles.add(obstacle1);
-    obstacles.add(obstacle2);
-    obstacles.add(obstacle3);
-
-    // Setup controls
-    cursors = this.input.keyboard.createCursorKeys();
-
-    // Setup mobile controls
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', handleOrientation);
-        gyroEnabled = true;
-    }
-
-    // Setup mouse control
-    this.input.on('pointermove', handleMouseMove);
-
-    // Collision handling
-    this.physics.add.overlap(ball, coins, collectCoin, null, this);
-    this.physics.add.collider(ball, obstacles, hitObstacle, null, this);
+    // Load the first level
+    loadLevel.call(this, currentLevel);
 
     // Setup input handlers based on active control
     setupControls.call(this);
@@ -94,20 +112,82 @@ function create() {
     this.joystickGraphics.setDepth(1000); // Make sure it's on top
 }
 
-function setupControls() {
-    // Remove all existing control listeners
-    if (window.DeviceOrientationEvent) {
-        window.removeEventListener('deviceorientation', handleOrientation);
-    }
-    this.input.off('pointermove');
-    this.input.off('pointerdown');
-    this.input.off('pointerup');
-    gyroEnabled = false;
+let currentLevel = 1;
+let levelsData;
 
-    // Setup new control scheme
+function loadLevel(levelNumber) {
+    // Clear existing objects
+    if (coins) coins.clear(true, true);
+    if (obstacles) obstacles.clear(true, true);
+    if (ball) ball.destroy();
+
+    // Find the level data
+    const level = levelsData.levels.find(l => l.id === levelNumber);
+    if (!level) {
+        console.error('Level not found:', levelNumber);
+        return;
+    }
+
+    // Create player ball with relative position
+    const relX = level.player.x / 800; // Assuming original width was 800
+    const relY = level.player.y / 600; // Assuming original height was 600
+    ball = this.add.circle(
+        gameWidth * relX,
+        gameHeight * relY,
+        Math.min(gameWidth, gameHeight) * 0.025, // Relative size
+        0xff0000
+    );
+    this.physics.add.existing(ball);
+    ball.body.setCollideWorldBounds(true);
+
+    // Create coins with relative positions
+    coins = this.add.group();
+    level.coins.forEach(coinData => {
+        const relX = coinData.x / 800;
+        const relY = coinData.y / 600;
+        const coin = this.add.circle(
+            gameWidth * relX,
+            gameHeight * relY,
+            Math.min(gameWidth, gameHeight) * 0.015,
+            0xffff00
+        );
+        this.physics.add.existing(coin);
+        coins.add(coin);
+    });
+
+    // Create obstacles with relative positions and sizes
+    obstacles = this.add.group();
+    level.obstacles.forEach(obstacleData => {
+        const relX = obstacleData.x / 800;
+        const relY = obstacleData.y / 600;
+        const relWidth = obstacleData.width / 800;
+        const relHeight = obstacleData.height / 600;
+        
+        const obstacle = this.add.rectangle(
+            gameWidth * relX,
+            gameHeight * relY,
+            gameWidth * relWidth,
+            gameHeight * relHeight,
+            0x0000ff
+        );
+        this.physics.add.existing(obstacle, true);
+        obstacles.add(obstacle);
+    });
+
+    // Setup collisions
+    this.physics.add.overlap(ball, coins, collectCoin, null, this);
+    this.physics.add.collider(ball, obstacles, hitObstacle, null, this);
+}
+
+function setupControls() {
+    const scene = game.scene.scenes[0];
+    // First clean up all controls
+    cleanupControls(scene);
+    
+    // Then setup new control scheme
     switch (activeControl) {
         case 'mouse':
-            setupVirtualJoystick.call(this);
+            setupVirtualJoystick(scene);
             break;
         case 'gyroscope':
             if (window.DeviceOrientationEvent) {
@@ -116,13 +196,32 @@ function setupControls() {
             }
             break;
         case 'keyboard':
-            // Keyboard controls are handled in update()
+            cursors = scene.input.keyboard.createCursorKeys();
             break;
     }
 }
 
-function setupVirtualJoystick() {
-    this.input.on('pointerdown', (pointer) => {
+function cleanupControls(scene) {
+    if (window.DeviceOrientationEvent) {
+        window.removeEventListener('deviceorientation', handleOrientation);
+    }
+    if (cursors) {
+        cursors.up.reset();
+        cursors.down.reset();
+        cursors.left.reset();
+        cursors.right.reset();
+        cursors = null;
+    }
+    if(scene.input){
+        scene.input.off('pointermove');
+        scene.input.off('pointerdown');
+        scene.input.off('pointerup');
+    }
+    gyroEnabled = false;
+}
+
+function setupVirtualJoystick(scene) {
+    scene.input.on('pointerdown', (pointer) => {
         if (activeControl === 'mouse') {
             isDragging = true;
             dragStartPos = { x: pointer.x, y: pointer.y };
@@ -130,7 +229,7 @@ function setupVirtualJoystick() {
         }
     });
 
-    this.input.on('pointermove', (pointer) => {
+    scene.input.on('pointermove', (pointer) => {
         if (activeControl === 'mouse' && isDragging) {
             // Calculate distance from joystick center
             const dx = pointer.x - dragStartPos.x;
@@ -151,7 +250,7 @@ function setupVirtualJoystick() {
         }
     });
 
-    this.input.on('pointerup', () => {
+    scene.input.on('pointerup', () => {
         if (activeControl === 'mouse') {
             isDragging = false;
             dragStartPos = null;
@@ -213,28 +312,43 @@ function update() {
 }
 
 function handleOrientation(event) {
-    if (gyroEnabled) {
-        const x = event.gamma;
-        const y = event.beta;
+    if (!ball || !gyroEnabled) return;
+
+    const x = event.gamma;
+    const y = event.beta;
+    if (x != null && y != null) {
         ball.body.setVelocityX(x * 20);
         ball.body.setVelocityY(y * 20);
     }
 }
 
-function handleMouseMove(pointer) {
-    const deltaX = pointer.x - ball.x;
-    const deltaY = pointer.y - ball.y;
-    ball.body.setVelocityX(deltaX * 0.2);
-    ball.body.setVelocityY(deltaY * 0.2);
-}
-
 function collectCoin(ball, coin) {
+    if (!coin || !coin.active) return;
     coin.destroy();
-    // Add score logic here
+    
+    // Check if level is complete
+    if (coins.countActive() === 0) {
+        // Move to next level
+        currentLevel++;
+        
+        // Check if there are more levels
+        if (currentLevel <= levelsData.levels.length) {
+            loadLevel.call(this, currentLevel);
+        } else {
+            console.log('Game Complete!');
+            currentLevel = 1; // Reset to first level
+            loadLevel.call(this, currentLevel);
+        }
+    }
 }
 
 function hitObstacle(ball, obstacle) {
-    // Add game over logic here
+    // Reset ball position to level start
+    const level = levelsData.levels.find(l => l.id === currentLevel);
+    if (level) {
+        ball.setPosition(level.player.x, level.player.y);
+        ball.body.setVelocity(0, 0);
+    }
 }
 
 // Listen for control changes
@@ -247,3 +361,21 @@ window.addEventListener('controlTypeChanged', (event) => {
 if (document.getElementById('game-menu') && window.GameMenu) {
     ReactDOM.createRoot(document.getElementById('game-menu')).render(React.createElement(GameMenu));
 }
+
+window.gameControls = {
+    pauseGame: function() {
+        if (game?.scene) {
+            game.scene.pause('default');
+        }
+    },
+    resumeGame: function() {
+        if (game?.scene) {
+            game.scene.resume('default');
+        }
+    },
+    quitGame: function() {
+        if (game?.scene) {
+            game.scene.start('default');
+        }
+    }
+};

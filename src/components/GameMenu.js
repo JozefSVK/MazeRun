@@ -9,19 +9,15 @@ const GameMenu = () => {
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
-        if (window.game) {
-            if (!isMenuOpen) {
-                window.game.scene.pause('GameScene');
-            } else {
-                window.game.scene.resume('GameScene');
-            }
+        if (!isMenuOpen) {
+            window.gameControls?.pauseGame();
+        } else {
+            window.gameControls?.resumeGame();
         }
     };
 
     const handleQuit = () => {
-        if (window.game) {
-            window.game.scene.start('MenuScene');
-        }
+        window.gameControls?.quitGame();
     };
 
     const handleControlChange = (newControl) => {
@@ -41,117 +37,137 @@ const GameMenu = () => {
         // Gear icon button
         React.createElement("button", {
             onClick: toggleMenu,
-            className: "fixed top-4 right-4 bg-gray-800 p-2 rounded-full hover:bg-gray-700 transition-colors z-50",
+            className: "fixed top-4 right-4 bg-gray-800 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700 transition-colors z-50",
             key: "gear-button"
         }, 
-            React.createElement("div", { 
-                className: "w-6 h-6 text-white"
-            }, "⚙️")
+            React.createElement("i", { 
+                className: "fas fa-gear text-white text-xl"
+            })
         ),
         
         // Modal overlay
         isMenuOpen && React.createElement("div", {
             className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40",
-            key: "modal-overlay",
-            onClick: toggleMenu
+            onClick: toggleMenu,
+            key: "modal-overlay"
         },
             // Menu container
             React.createElement("div", {
-                className: "bg-white rounded-lg shadow-lg p-6 w-80",
+                className: "bg-white rounded-lg shadow-lg p-6 min-w-[320px]",
                 onClick: e => e.stopPropagation()
             }, [
-                // Title
+                // Game Menu heading
                 React.createElement("h2", {
-                    className: "text-xl font-bold mb-4 text-center text-gray-800",
+                    className: "text-2xl font-bold text-center text-gray-800 mb-6",
                     key: "menu-title"
                 }, "Game Menu"),
 
                 // Controls section
+                React.createElement("h3", {
+                    className: "text-lg font-semibold text-gray-700 mb-4",
+                    key: "controls-title"
+                }, "Controls"),
+
+                // Controls container
                 React.createElement("div", {
-                    className: "mb-4",
-                    key: "controls-section"
+                    className: "flex justify-center gap-8 mb-6",
+                    key: "controls"
                 }, [
-                    React.createElement("h3", {
-                        className: "text-lg font-semibold mb-2 text-gray-700",
-                        key: "controls-title"
-                    }, "Controls"),
-                    
-                    // Control options for desktop
-                    !isMobile && React.createElement("div", {
-                        className: "space-y-2",
-                        key: "desktop-controls"
+                    // Keyboard control (PC only)
+                    !isMobile && React.createElement("button", {
+                        onClick: () => {
+                            setControlType('keyboard');
+                            localStorage.setItem('controlType', 'keyboard');
+                            window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
+                                detail: { controlType: 'keyboard' } 
+                            }));
+                        },
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'keyboard' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "keyboard"
                     }, [
-                        // Keyboard option
-                        React.createElement("button", {
-                            onClick: () => handleControlChange('keyboard'),
-                            className: `w-full px-4 py-2 rounded ${
-                                controlType === 'keyboard' 
-                                    ? 'bg-blue-500 text-white' 
-                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`,
-                            key: "keyboard-button"
-                        }, "Keyboard (WASD/Arrows)"),
-                        
-                        // Mouse option
-                        React.createElement("button", {
-                            onClick: () => handleControlChange('mouse'),
-                            className: `w-full px-4 py-2 rounded ${
-                                controlType === 'mouse' 
-                                    ? 'bg-blue-500 text-white' 
-                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`,
-                            key: "mouse-button"
-                        }, "Mouse")
+                        React.createElement("i", { 
+                            className: "fas fa-keyboard text-3xl mb-2"
+                        }),
+                        React.createElement("span", { 
+                            className: "text-sm"
+                        }, "Keyboard")
                     ]),
 
-                    // Control options for mobile
-                    isMobile && React.createElement("div", {
-                        className: "space-y-2",
-                        key: "mobile-controls"
+                    // Mouse/Joystick control (all devices)
+                    React.createElement("button", {
+                        onClick: () => {
+                            setControlType('mouse');
+                            localStorage.setItem('controlType', 'mouse');
+                            window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
+                                detail: { controlType: 'mouse' } 
+                            }));
+                        },
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'mouse' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "mouse"
                     }, [
-                        // Touch/Mouse option
-                        React.createElement("button", {
-                            onClick: () => handleControlChange('mouse'),
-                            className: `w-full px-4 py-2 rounded ${
-                                controlType === 'mouse' 
-                                    ? 'bg-blue-500 text-white' 
-                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`,
-                            key: "touch-button"
-                        }, "Touch/Mouse"),
-                        
-                        // Gyroscope option (if available)
-                        hasGyroscope && React.createElement("button", {
-                            onClick: () => handleControlChange('gyroscope'),
-                            className: `w-full px-4 py-2 rounded ${
-                                controlType === 'gyroscope' 
-                                    ? 'bg-blue-500 text-white' 
-                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`,
-                            key: "gyro-button"
+                        React.createElement("i", { 
+                            className: isMobile ? "fas fa-hand-pointer" : "fas fa-mouse"
+                        }, " "),
+                        React.createElement("span", { 
+                            className: "text-sm mt-2"
+                        }, isMobile ? "Touch" : "Mouse")
+                    ]),
+
+                    // Gyroscope control (only on supported mobile devices)
+                    (isMobile && hasGyroscope) && React.createElement("button", {
+                        onClick: () => {
+                            setControlType('gyroscope');
+                            localStorage.setItem('controlType', 'gyroscope');
+                            window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
+                                detail: { controlType: 'gyroscope' } 
+                            }));
+                        },
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'gyroscope' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "gyroscope"
+                    }, [
+                        React.createElement("i", { 
+                            className: "fas fa-mobile-alt text-3xl mb-2"
+                        }),
+                        React.createElement("span", { 
+                            className: "text-sm"
                         }, "Gyroscope")
                     ])
                 ]),
 
                 // Divider
                 React.createElement("hr", {
-                    className: "my-4 border-gray-200",
+                    className: "my-6 border-gray-200",
                     key: "divider"
                 }),
-                
-                // Continue button
-                React.createElement("button", {
-                    onClick: toggleMenu,
-                    className: "w-full mb-2 px-4 py-2 text-gray-800 hover:bg-gray-100 rounded transition-colors",
-                    key: "continue-button"
-                }, "Continue"),
-                
-                // Quit button
-                React.createElement("button", {
-                    onClick: handleQuit,
-                    className: "w-full px-4 py-2 text-gray-800 hover:bg-gray-100 rounded transition-colors",
-                    key: "quit-button"
-                }, "Quit")
+
+                // Buttons
+                React.createElement("div", {
+                    className: "flex flex-col gap-2",
+                    key: "buttons"
+                }, [
+                    React.createElement("button", {
+                        onClick: toggleMenu,
+                        className: "w-full px-4 py-2 text-gray-800 hover:bg-gray-100 rounded transition-colors",
+                        key: "continue"
+                    }, "Continue"),
+                    React.createElement("button", {
+                        onClick: handleQuit,
+                        className: "w-full px-4 py-2 text-gray-800 hover:bg-gray-100 rounded transition-colors",
+                        key: "quit"
+                    }, "Quit")
+                ])
             ])
         )
     ]);
