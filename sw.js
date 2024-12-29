@@ -3,9 +3,6 @@ const urlsToCache = [
     '/',
     '/index.html',
     '/game.js',
-    '/assets/ball.png',
-    '/assets/coin.png',
-    '/assets/obstacle.png'
 ];
 
 self.addEventListener('install', event => {
