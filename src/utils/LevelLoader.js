@@ -1,3 +1,5 @@
+import Coin from "../entities/Coin.js"
+
 class LevelLoader {
     constructor(scene) {
         this.scene = scene;
@@ -43,9 +45,24 @@ class LevelLoader {
     }
 
     clearLevel(){
-        if (this.scene.coins) this.scene.coins.clear(true, true);
-        if (this.scene.obstacles) this.scene.obstacles.clear(true, true);
-        if (this.scene.ball) this.scene.ball.destroy();
+        console.log('Clearing level...', {
+            coinsExists: !!this.scene.coins,
+            // coinsLength: this.scene.coins && this.scene.coins.getChildren?.()?.length
+        });
+        if (this.scene.coins) {
+            this.scene.coins.clear(true, true); // Clear group contents
+            this.scene.coins.destroy(true); // Destroy the group itself
+            this.scene.coins = null;
+        }
+        if (this.scene.obstacles) {
+            this.scene.obstacles.clear(true, true);
+            this.scene.obstacles.destroy(true);
+            this.scene.obstacles = null;
+        }
+        if (this.scene.ball?.destroy) {
+            this.scene.ball.destroy();
+            this.scene.ball = null;
+        }
     }
 
     createPlayer(playerData) {
@@ -64,20 +81,47 @@ class LevelLoader {
     }
 
     createCoins(coinsData) {
-        this.scene.coins = this.scene.add.group();
+        // this.scene.coins = this.scene.add.group();
+
+        // coinsData.forEach(coinData => {
+        //     const relX = coinData.x / this.BASE_WIDTH;
+        //     const relY = coinData.y / this.BASE_HEIGHT;
+        //     const size = Math.min(this.gameWidth, this.gameHeight) * 0.015;
+
+        //     // const coin = new Coin(
+        //     //     this.gameWidth * relX,
+        //     //     this.gameHeight * relY,
+        //     //     size,
+        //     //     0xffff00
+        //     // );
+        //     // this.scene.physics.add.existing(coin, true);
+            
+        //     const coin = new Coin(
+        //         this.scene,
+        //         this.gameWidth * relX,
+        //         this.gameHeight * relY,
+        //         size
+        //     );
+        //     this.scene.coins.add(coin);
+        // });
+
+        // Create a group that can handle containers
+        this.scene.coins = this.scene.add.group({
+            classType: Coin,
+            runChildUpdate: true
+        });
 
         coinsData.forEach(coinData => {
             const relX = coinData.x / this.BASE_WIDTH;
             const relY = coinData.y / this.BASE_HEIGHT;
             const size = Math.min(this.gameWidth, this.gameHeight) * 0.015;
-
-            const coin = this.scene.add.circle(
+            
+            const coin = new Coin(
+                this.scene,
                 this.gameWidth * relX,
                 this.gameHeight * relY,
-                size,
-                0xffff00
+                size
             );
-            this.scene.physics.add.existing(coin);
             this.scene.coins.add(coin);
         });
     }

@@ -34,25 +34,6 @@ window.addEventListener('load', function() {
         };
 
         window.game = new Phaser.Game(config);
-
-        // Global game controls for menu integration
-        window.gameControls = {
-            pauseGame: function() {
-                if (window.game?.scene) {
-                    window.game.scene.pause('GameScene');
-                }
-            },
-            resumeGame: function() {
-                if (window.game?.scene) {
-                    window.game.scene.resume('GameScene');
-                }
-            },
-            quitGame: function() {
-                if (window.game?.scene) {
-                    window.game.scene.start('MenuScene');
-                }
-            }
-        };
     } else {
         console.error('Scene classes not loaded properly');
     }

@@ -1,6 +1,7 @@
 import InputController from "../controllers/InputController.js";
 import LevelLoader from "../utils/LevelLoader.js";
 import GameMenu from '../components/GameMenu.js'; 
+import Coin from '../entities/Coin.js';
 
 console.log('GameScene.js loaded');
 class GameScene extends Phaser.Scene {
@@ -26,8 +27,6 @@ class GameScene extends Phaser.Scene {
             score: 0,
             currentLevel: 1
         }
-
-        this.gameMenu = null;
     }
 
     preload() {
@@ -71,23 +70,26 @@ class GameScene extends Phaser.Scene {
 
     setupGameMenu() {
         // this.gameMenu = new GameMenu(this);
-        if(document.getElementById('game-menu')){
-            ReactDOM.createRoot(document.getElementById('game-menu'))
-                .render(React.createElement(GameMenu));
-        }
-    
+        const menuRoot = document.getElementById('game-menu');
+        if (!menuRoot) return;
+        
+        this.menuRoot = ReactDOM.createRoot(menuRoot);
+        this.menuRoot.render(React.createElement(GameMenu));
+        
         window.gameControls = {
-            pauseGame: () => {
-                this.gameState.isPaused = true;
-                this.scene.pause()
-            },
-            resumeGame: () => {
-                this.gameState.isPaused = false;
-                this.scene.resume()
-            },
+            pauseGame: () => this.scene.pause(),
+            resumeGame: () => this.scene.resume(),
             quitGame: () => {
-                this.cleanup();
-                this.scene.start('MenuScene');
+                try {
+                    if (this.menuRoot) {
+                        this.menuRoot.unmount();
+                        this.menuRoot = null;
+                    }
+                    this.cleanup();
+                    this.scene.start('MenuScene');
+                } catch (error) {
+                    console.error('Error during quitGame:', error);
+                }
             }
         };
     }
@@ -138,14 +140,15 @@ class GameScene extends Phaser.Scene {
     collectCoin(ball, coin) {
         if (!coin?.active || !this.coins) return;
         
-        coin.destroy();
+        // Get the parent container if the collision is with the coin circle
+        const coinObject = coin.parentContainer || coin;
+        coinObject.destroy();
         this.coinsCollected++;
         this.updateScore();
         
-        // Check if level is complete
-        if (this.coins.countActive() === 0 && this.loadLevel) {
+        if (this.coins.countActive() === 0) {
             this.levelLoader.nextLevel();
-        }
+        }   
     }
 
     hitObstacle(ball, obstacle) {
@@ -165,7 +168,9 @@ class GameScene extends Phaser.Scene {
 
     cleanup() {
         // Clean up event listeners
-        this.scale.off('resize', this.handleResize, this);
+        if (this.scale) {
+            this.scale.off('resize', this.handleResize, this);
+        }
         
         // Clean up components
         if (this.inputController) {
@@ -173,10 +178,10 @@ class GameScene extends Phaser.Scene {
             this.inputController = null;
         }
 
-        // Clean up game objects
-        if (this.coins) this.coins.clear(true, true);
-        if (this.obstacles) this.obstacles.clear(true, true);
-        if (this.ball) this.ball.destroy();
+        if(this.menuRoot) {
+            this.menuRoot.unmount();
+            this.menuRoot = null;
+        }
 
         // Clean up menu
         if (window.gameControls) {
@@ -191,8 +196,10 @@ class GameScene extends Phaser.Scene {
         this.coinsCollected = 0;
         this.totalCoins = 0;
 
-        if(this.gameMenu){
-            this.gameMenu.destroy();
+
+        if (this.levelLoader) {
+            this.levelLoader.clearLevel();
+            this.levelLoader = null;
         }
     }
 }

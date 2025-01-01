@@ -11,6 +11,14 @@ const GameMenu = () => {
         return localStorage.getItem('controlType') || 'keyboard';
     });
 
+    // Add this useEffect here
+    React.useEffect(() => {
+        return () => {
+            window.gameControls?.resumeGame();
+            window.gameControls = null;
+        };
+    }, []);
+
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
         if (!isMenuOpen) {
@@ -21,7 +29,14 @@ const GameMenu = () => {
     };
 
     const handleQuit = () => {
-        window.gameControls?.quitGame();
+        try {
+            if (window.gameControls?.quitGame) {
+                setIsMenuOpen(false);
+                window.gameControls.quitGame();
+            }
+        } catch (error) {
+            console.error('Error during quit:', error);
+        }
     };
 
     const handleControlChange = (newControl) => {
