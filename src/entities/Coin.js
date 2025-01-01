@@ -40,11 +40,12 @@ class Coin extends Phaser.GameObjects.Container {
             ease: 'Sine.easeInOut'
         });
 
-        // Glow pulse
+        // Enhanced glow pulse
         this.scene.tweens.add({
             targets: this.glow,
-            alpha: 0.4,
-            duration: 1500,
+            scale: 1.2,
+            alpha: 0.1,
+            duration: 1000,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'

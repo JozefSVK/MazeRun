@@ -138,17 +138,19 @@ class GameScene extends Phaser.Scene {
     }
 
     collectCoin(ball, coin) {
-        if (!coin?.active || !this.coins) return;
+        console.log('Coin collected', {
+            coinsLeft: this.coins?.getLength(),
+            levelLoader: !!this.levelLoader
+        });
         
-        // Get the parent container if the collision is with the coin circle
-        const coinObject = coin.parentContainer || coin;
-        coinObject.destroy();
+        coin.destroy();
         this.coinsCollected++;
         this.updateScore();
         
-        if (this.coins.countActive() === 0) {
+        if (this.coins?.getLength() === 0 && this.levelLoader) {
+            console.log('Attempting next level');
             this.levelLoader.nextLevel();
-        }   
+        }    
     }
 
     hitObstacle(ball, obstacle) {

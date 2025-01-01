@@ -32,6 +32,7 @@ class LevelLoader {
             console.error('Level not found:', levelNumber);
             return;
         }
+        console.log('Found level data:', !!level);
 
         // Reset coins count in GameScene
         this.scene.coinsCollected = 0;
@@ -49,6 +50,10 @@ class LevelLoader {
             coinsExists: !!this.scene.coins,
             // coinsLength: this.scene.coins && this.scene.coins.getChildren?.()?.length
         });
+        if (this.scene.physics.world) {
+            this.scene.physics.world.colliders.destroy();
+        }
+        
         if (this.scene.coins) {
             this.scene.coins.clear(true, true); // Clear group contents
             this.scene.coins.destroy(true); // Destroy the group itself
@@ -81,6 +86,10 @@ class LevelLoader {
     }
 
     createCoins(coinsData) {
+        if(!coinsData?.length){
+            this.nextLevel();
+            return;
+        }
         // this.scene.coins = this.scene.add.group();
 
         // coinsData.forEach(coinData => {
@@ -127,6 +136,7 @@ class LevelLoader {
     }
 
     createObstacles(obstaclesData) {
+        if(!obstaclesData?.length) return;
         this.scene.obstacles = this.scene.add.group();
 
         obstaclesData.forEach(obstacleData => {
@@ -148,27 +158,41 @@ class LevelLoader {
     }
 
     setupCollisions() {
-        this.scene.physics.add.overlap(
-            this.scene.ball, 
-            this.scene.coins, 
-            this.scene.collectCoin, 
-            null, 
-            this.scene
-        );
-        this.scene.physics.add.collider(
-            this.scene.ball, 
-            this.scene.obstacles, 
-            this.scene.hitObstacle, 
-            null, 
-            this.scene
-        );
+        // Clear existing colliders/overlaps
+        if (this.scene.physics.world) {
+            this.scene.physics.world.colliders.destroy();
+        }
+
+        if (this.scene.coins) {
+            this.scene.physics.add.overlap(
+                this.scene.ball, 
+                this.scene.coins, 
+                this.scene.collectCoin, 
+                null, 
+                this.scene
+            );
+        }
+
+        if (this.scene.obstacles) {
+            this.scene.physics.add.collider(
+                this.scene.ball, 
+                this.scene.obstacles, 
+                this.scene.hitObstacle, 
+                null, 
+                this.scene
+            );
+        }
     }
 
     nextLevel() {
+        console.log('Current level:', this.currentLevel);
+        console.log('Total levels:', this.levelsData.levels.length);
         this.currentLevel++;
         if (this.currentLevel <= this.levelsData.levels.length) {
+            console.log('Loading next level:', this.currentLevel);
             this.loadLevel(this.currentLevel);
         } else {
+            console.log('Going to EndScene');
             this.scene.scene.start('EndScene');
         }
     }
