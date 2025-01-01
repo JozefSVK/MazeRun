@@ -3,6 +3,9 @@ const urlsToCache = [
     '/',
     '/index.html',
     '/game.js',
+    '/src/scenes/GameScene.js',
+    '/src/scenes/MenuScene.js',
+    '/src/scenes/InstructionsScene.js'
 ];
 
 self.addEventListener('install', event => {

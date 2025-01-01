@@ -16,12 +16,16 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="game"></div>
-    <div id="game-menu"></div>
-    
-    <!-- Game Menu Component MUST come before game.js -->
+    <div id="game">
+        <div id="game-menu"></div>
+    </div>
+    <!-- <script src="src/utils/LevelLoader.js"></script>
+    <script src="src/controllers/InputController.js"></script>
     <script src="src/components/GameMenu.js"></script>
-    <!-- Main game script -->
-    <script src="game.js"></script>
+    <script src="src/scenes/MenuScene.js"></script>
+    <script src="src/scenes/InstructionScene.js"></script>
+    <script src="src/scenes/GameScene.js"></script> -->
+
+    <script type="module" src="game.js"></script>
 </body>
 </html>
