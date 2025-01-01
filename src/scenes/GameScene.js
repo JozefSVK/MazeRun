@@ -26,6 +26,8 @@ class GameScene extends Phaser.Scene {
             score: 0,
             currentLevel: 1
         }
+
+        this.gameMenu = null;
     }
 
     preload() {
@@ -41,6 +43,10 @@ class GameScene extends Phaser.Scene {
         this.setupGameObjects();
         this.setupEventListeners();
         this.setupGameMenu();
+
+        const graphics = this.add.graphics();
+        graphics.lineStyle(2, 0xFFFFFF); // 2px white line
+        graphics.strokeRect(0, 0, this.gameWidth, this.gameHeight);
     }
 
     setupGameObjects(){
@@ -64,7 +70,8 @@ class GameScene extends Phaser.Scene {
     }
 
     setupGameMenu() {
-        if (document.getElementById('game-menu')) {
+        // this.gameMenu = new GameMenu(this);
+        if(document.getElementById('game-menu')){
             ReactDOM.createRoot(document.getElementById('game-menu'))
                 .render(React.createElement(GameMenu));
         }
@@ -183,6 +190,10 @@ class GameScene extends Phaser.Scene {
         
         this.coinsCollected = 0;
         this.totalCoins = 0;
+
+        if(this.gameMenu){
+            this.gameMenu.destroy();
+        }
     }
 }
 

@@ -6,9 +6,13 @@ html, body {
     overflow: hidden;
 }
 
+body {
+    background-color: #000;
+}
+
 #game {
     position: relative;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
 }
 
