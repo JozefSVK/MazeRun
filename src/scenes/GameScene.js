@@ -53,7 +53,10 @@ class GameScene extends Phaser.Scene {
             // Initialize level loader first
             this.levelLoader = new LevelLoader(this);
             this.levelLoader.loadLevelsData();
-            this.levelLoader.loadLevel(1);
+            
+            // Get the level from scene data, or default to 1
+            const level = this.scene.settings.data?.level || 1;
+            this.levelLoader.loadLevel(level);
     
             // Initialize input controller after player exists
             this.inputController = new InputController(this);
@@ -137,6 +140,25 @@ class GameScene extends Phaser.Scene {
             this.inputController.update();
     }
 
+    fadeOut(callback) {
+        // Create a black rectangle that covers the entire game
+        const fade = this.add.rectangle(0, 0, this.gameWidth, this.gameHeight, 0x000000);
+        fade.setOrigin(0);
+        fade.setDepth(1000); // Make sure it's above everything
+        fade.alpha = 0;
+
+        // Create the fade out effect
+        this.tweens.add({
+            targets: fade,
+            alpha: 1,
+            duration: 500,
+            ease: 'Power2',
+            onComplete: () => {
+                if (callback) callback();
+            }
+        });
+    }
+
     collectCoin(ball, coin) {
         console.log('Coin collected', {
             coinsLeft: this.coins?.getLength(),
@@ -148,9 +170,14 @@ class GameScene extends Phaser.Scene {
         this.updateScore();
         
         if (this.coins?.getLength() === 0 && this.levelLoader) {
-            console.log('Attempting next level');
-            this.levelLoader.nextLevel();
-        }    
+            console.log('All coins collected, starting fade out');
+            // Instead of immediately going to next level, fade out first
+            this.fadeOut(() => {
+                if (this.levelLoader) {
+                    this.levelLoader.nextLevel();
+                }
+            });
+        }       
     }
 
     hitObstacle(ball, obstacle) {
@@ -203,6 +230,8 @@ class GameScene extends Phaser.Scene {
             this.levelLoader.clearLevel();
             this.levelLoader = null;
         }
+
+        this.tweens.killAll();
     }
 }
 

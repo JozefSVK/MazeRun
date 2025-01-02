@@ -1,6 +1,8 @@
 import GameScene from "./src/scenes/GameScene.js";
 import MenuScene from "./src/scenes/MenuScene.js";
 import InstructionsScene from "./src/scenes/InstructionScene.js";
+import TransitionScene from "./src/scenes/TransitionScene.js";
+import EndScene from "./src/scenes/EndScene.js";
 
 window.addEventListener('load', function() {
     console.log('Window loaded');
@@ -30,7 +32,7 @@ window.addEventListener('load', function() {
                     debug: false
                 }
             },
-            scene: [MenuScene, GameScene, InstructionsScene]
+            scene: [MenuScene, GameScene, InstructionsScene, TransitionScene, EndScene]
         };
 
         window.game = new Phaser.Game(config);

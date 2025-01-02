@@ -3,7 +3,7 @@ import Coin from "../entities/Coin.js"
 class LevelLoader {
     constructor(scene) {
         this.scene = scene;
-        this.currentLevel = 1;
+        this.currentLevel = scene.scene.settings.data?.level || 1;
         this.levelsData = null;
 
         // Store reference to scene dimensions
@@ -194,12 +194,11 @@ class LevelLoader {
         this.currentLevel++;
         if (this.currentLevel <= this.levelsData.levels.length) {
             console.log('Loading next level:', this.currentLevel);
-            this.scene.time.delayedCall(100, () => this.loadLevel(this.currentLevel)); // Add delay
+            // this.scene.time.delayedCall(100, () => this.loadLevel(this.currentLevel)); // Add delay
+            this.scene.scene.start('TransitionScene', { nextLevel: this.currentLevel });
         } else {
             console.log('Going to EndScene');
-            this.scene.time.delayedCall(100, () => {
-                this.scene.scene.start('MenuScene');
-            });
+            this.scene.scene.start('EndScene');
         }
     }
 

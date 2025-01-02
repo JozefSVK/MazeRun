@@ -19,7 +19,8 @@ class MenuScene extends Phaser.Scene {
         instructionsButton.setInteractive();
 
         startButton.on('pointerup', () => {
-            this.scene.start('GameScene');
+            // this.scene.start('GameScene');
+            this.scene.start('TransitionScene', { nextLevel: 1 });
         });
 
         instructionsButton.on('pointerup', () => {
