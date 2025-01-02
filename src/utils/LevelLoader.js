@@ -1,9 +1,10 @@
 import Coin from "../entities/Coin.js"
+import Storage from '../utils/Storage.js';
 
 class LevelLoader {
     constructor(scene) {
         this.scene = scene;
-        this.currentLevel = scene.scene.settings.data?.level || 1;
+        this.currentLevel = Storage.getCurrentLevel();
         this.levelsData = null;
 
         // Store reference to scene dimensions
@@ -11,8 +12,8 @@ class LevelLoader {
         this.gameHeight = scene.gameHeight;
 
         // Base dimensions for relative calculations
-        this.BASE_WIDTH = 800;
-        this.BASE_HEIGHT = 600;
+        this.BASE_WIDTH = 1280;
+        this.BASE_HEIGHT = 720;
     }
 
     loadLevelsData() {
@@ -25,6 +26,9 @@ class LevelLoader {
     loadLevel(levelNumber) {
         // Clear existing objects
         this.clearLevel();
+
+        Storage.saveCurrentLevel(levelNumber);
+        this.currentLevel = levelNumber;
 
         // Find the level data
         const level = this.levelsData.levels.find(l => l.id === levelNumber);
@@ -61,8 +65,9 @@ class LevelLoader {
 
         // Clear and destroy obstacles
         if (this.scene.obstacles instanceof Phaser.GameObjects.Group) {
-            this.scene.obstacles.clear(true, true);
-            this.scene.obstacles.destroy(true);
+            if (typeof this.scene.obstacles.destroy === 'function') {
+                this.scene.obstacles.destroy(true);
+            }
             this.scene.obstacles = null;
         }
 
@@ -191,13 +196,28 @@ class LevelLoader {
     nextLevel() {
         console.log('Current level:', this.currentLevel);
         console.log('Total levels:', this.levelsData.levels.length);
-        this.currentLevel++;
-        if (this.currentLevel <= this.levelsData.levels.length) {
-            console.log('Loading next level:', this.currentLevel);
-            // this.scene.time.delayedCall(100, () => this.loadLevel(this.currentLevel)); // Add delay
+
+        // Mark the current level as completed since player collected all coins
+        Storage.addPlayedLevel(this.currentLevel);
+        
+        // Check if all levels have been played
+        if (Storage.areAllLevelsPlayed(this.levelsData.levels)) {
+            console.log('All levels completed, clearing played levels');
+            Storage.clearProgress(); // Clear both played levels and current level
+            this.scene.scene.start('EndScene');
+            return;
+        }
+        
+        
+        // Get a random unplayed level
+        const nextLevelId = Storage.getRandomUnplayedLevel(this.levelsData.levels);
+        if (nextLevelId) {
+            this.currentLevel = nextLevelId;
+            Storage.saveCurrentLevel(nextLevelId); // Save the next level
+            console.log('Loading next unplayed level:', this.currentLevel);
             this.scene.scene.start('TransitionScene', { nextLevel: this.currentLevel });
         } else {
-            console.log('Going to EndScene');
+            console.error('No levels available to play');
             this.scene.scene.start('EndScene');
         }
     }
