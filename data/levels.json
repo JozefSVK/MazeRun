@@ -50,6 +50,42 @@
                 {"x": 500, "y": 500, "width": 20, "height": 300},
                 {"x": 700, "y": 400, "width": 300, "height": 20}
             ]
+        },
+        {
+            "id": 4,
+            "name": "Trap Challenge",
+            "player": {
+                "x": 50,
+                "y": 50
+            },
+            "coins": [
+                {"x": 200, "y": 150},
+                {"x": 400, "y": 300},
+                {"x": 600, "y": 450},
+                {"x": 800, "y": 600},
+                {"x": 1000, "y": 300}
+            ],
+            "traps": [
+                {
+                    "type": "spikeball",
+                    "x": 400,
+                    "y": 400
+                },
+                {
+                    "type": "rotatingblade",
+                    "x": 800,
+                    "y": 200,
+                    "width": 300,         
+                    "rotationSpeed": 3000
+                },
+                {
+                    "type": "rotatingblade",
+                    "x": 200,
+                    "y": 300,
+                    "width": 200,
+                    "rotationSpeed": 1500
+                }
+            ]
         }
     ]
 }

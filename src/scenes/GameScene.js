@@ -10,6 +10,7 @@ class GameScene extends Phaser.Scene {
         // Scene-specific variables
         this.ball = null;
         this.coins = null;
+        this.traps = null;
         this.obstacles = null;
         this.gameWidth = null;
         this.gameHeight = null;
@@ -187,6 +188,28 @@ class GameScene extends Phaser.Scene {
         if (currentLevel ) {
             const relX = currentLevel .player.x / this.levelLoader.BASE_WIDTH;
             const relY = currentLevel .player.y / this.levelLoader.BASE_HEIGHT;
+            this.ball.setPosition(
+                this.gameWidth * relX,
+                this.gameHeight * relY
+            );
+            this.ball.body.setVelocity(0, 0);
+        }
+    }
+
+    hitTrap(ball, traps) {
+        // You can add special effects here (particle effects, screen shake, etc.)
+        this.cameras.main.shake(200, 0.01);
+        
+        // Reset ball position just like with obstacles
+        if (!this.levelLoader) return;
+        
+        const currentLevel = this.levelLoader.levelsData.levels.find(
+            l => l.id === this.levelLoader.currentLevel
+        );
+        
+        if (currentLevel) {
+            const relX = currentLevel.player.x / this.levelLoader.BASE_WIDTH;
+            const relY = currentLevel.player.y / this.levelLoader.BASE_HEIGHT;
             this.ball.setPosition(
                 this.gameWidth * relX,
                 this.gameHeight * relY

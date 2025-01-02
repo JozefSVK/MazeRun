@@ -1,5 +1,6 @@
 import Coin from "../entities/Coin.js"
 import Storage from '../utils/Storage.js';
+import { SpikeBall, RotatingBlade } from "../entities/traps.js"; 
 
 class LevelLoader {
     constructor(scene) {
@@ -46,6 +47,7 @@ class LevelLoader {
         this.createPlayer(level.player);
         this.createCoins(level.coins);
         this.createObstacles(level.obstacles);
+        this.createTraps(level.traps)
         this.setupCollisions();
     }
 
@@ -71,10 +73,44 @@ class LevelLoader {
             this.scene.obstacles = null;
         }
 
+        if (this.scene.traps) {
+            this.scene.traps.destroy(true);
+            this.scene.traps = null;
+        }
+
         // Destroy ball
         if (this.scene.ball?.destroy) {
             this.scene.ball.destroy();
             this.scene.ball = null;
+        }
+    }
+
+    nextLevel() {
+        console.log('Current level:', this.currentLevel);
+        console.log('Total levels:', this.levelsData.levels.length);
+
+        // Mark the current level as completed since player collected all coins
+        Storage.addPlayedLevel(this.currentLevel);
+        
+        // Check if all levels have been played
+        if (Storage.areAllLevelsPlayed(this.levelsData.levels)) {
+            console.log('All levels completed, clearing played levels');
+            Storage.clearProgress(); // Clear both played levels and current level
+            this.scene.scene.start('EndScene');
+            return;
+        }
+        
+        
+        // Get a random unplayed level
+        const nextLevelId = Storage.getRandomUnplayedLevel(this.levelsData.levels);
+        if (nextLevelId) {
+            this.currentLevel = nextLevelId;
+            Storage.saveCurrentLevel(nextLevelId); // Save the next level
+            console.log('Loading next unplayed level:', this.currentLevel);
+            this.scene.scene.start('TransitionScene', { nextLevel: this.currentLevel });
+        } else {
+            console.error('No levels available to play');
+            this.scene.scene.start('EndScene');
         }
     }
 
@@ -166,6 +202,47 @@ class LevelLoader {
         });
     }
 
+    createTraps(trapsData) {
+        if (!trapsData?.length) return;
+    
+        this.scene.traps = this.scene.add.group();
+        
+        trapsData.forEach(trapData => {
+            const relX = trapData.x / this.BASE_WIDTH;
+            const relY = trapData.y / this.BASE_HEIGHT;
+            let trap;
+            
+            if (trapData.type === 'spikeball') {
+                const size = Math.min(this.gameWidth, this.gameHeight) * 0.025;
+                trap = new SpikeBall(
+                    this.scene,
+                    this.gameWidth * relX,
+                    this.gameHeight * relY,
+                    size
+                );
+            } else if (trapData.type === 'rotatingblade') {
+                // Convert width to relative size
+                const baseWidth = trapData.width || 200;
+                const relativeWidth = (baseWidth / this.BASE_WIDTH) * this.gameWidth;
+                
+                trap = new RotatingBlade(
+                    this.scene,
+                    this.gameWidth * relX,
+                    this.gameHeight * relY,
+                    {
+                        width: relativeWidth,
+                        rotationSpeed: trapData.rotationSpeed || 2000,
+                        bladeWidth: Math.min(this.gameWidth, this.gameHeight) * 0.015
+                    }
+                );
+            }
+            
+            if (trap) {
+                this.scene.traps.add(trap);
+            }
+        });
+    }
+
     setupCollisions() {
         // Clear existing colliders/overlaps
         if (this.scene.physics.world) {
@@ -191,36 +268,20 @@ class LevelLoader {
                 this.scene
             );
         }
-    }
 
-    nextLevel() {
-        console.log('Current level:', this.currentLevel);
-        console.log('Total levels:', this.levelsData.levels.length);
-
-        // Mark the current level as completed since player collected all coins
-        Storage.addPlayedLevel(this.currentLevel);
-        
-        // Check if all levels have been played
-        if (Storage.areAllLevelsPlayed(this.levelsData.levels)) {
-            console.log('All levels completed, clearing played levels');
-            Storage.clearProgress(); // Clear both played levels and current level
-            this.scene.scene.start('EndScene');
-            return;
-        }
-        
-        
-        // Get a random unplayed level
-        const nextLevelId = Storage.getRandomUnplayedLevel(this.levelsData.levels);
-        if (nextLevelId) {
-            this.currentLevel = nextLevelId;
-            Storage.saveCurrentLevel(nextLevelId); // Save the next level
-            console.log('Loading next unplayed level:', this.currentLevel);
-            this.scene.scene.start('TransitionScene', { nextLevel: this.currentLevel });
-        } else {
-            console.error('No levels available to play');
-            this.scene.scene.start('EndScene');
+        // Add this to your setupCollisions method
+        if (this.scene.traps && this.scene.ball) {
+            this.scene.physics.add.collider(
+                this.scene.ball,
+                this.scene.traps,
+                this.scene.hitTrap,
+                null,
+                this.scene
+            );
         }
     }
+
+    
 
     // Helper method to update dimensions when screen is resized
     updateDimensions(width, height) {
