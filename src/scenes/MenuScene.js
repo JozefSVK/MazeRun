@@ -57,7 +57,10 @@ class MenuScene extends Phaser.Scene {
         });
 
         instructionsButton.on('pointerup', () => {
-            this.scene.start('InstructionsScene');
+            // Save the URL of the current page so we can store the game state
+            const currentUrl = window.location.href;
+            // Navigate to instructions page
+            window.location.href = 'instructions.html';
         });
 
         // Add hover effects
