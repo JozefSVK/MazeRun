@@ -50,20 +50,23 @@ class LevelLoader {
             coinsExists: !!this.scene.coins,
             // coinsLength: this.scene.coins && this.scene.coins.getChildren?.()?.length
         });
-        if (this.scene.physics.world) {
-            this.scene.physics.world.colliders.destroy();
-        }
         
+        // Safely clear and destroy coins
         if (this.scene.coins) {
-            this.scene.coins.clear(true, true); // Clear group contents
-            this.scene.coins.destroy(true); // Destroy the group itself
+            if (typeof this.scene.coins.destroy === 'function') {
+                this.scene.coins.destroy(true);
+            }
             this.scene.coins = null;
         }
-        if (this.scene.obstacles) {
+
+        // Clear and destroy obstacles
+        if (this.scene.obstacles instanceof Phaser.GameObjects.Group) {
             this.scene.obstacles.clear(true, true);
             this.scene.obstacles.destroy(true);
             this.scene.obstacles = null;
         }
+
+        // Destroy ball
         if (this.scene.ball?.destroy) {
             this.scene.ball.destroy();
             this.scene.ball = null;
@@ -87,6 +90,7 @@ class LevelLoader {
 
     createCoins(coinsData) {
         if(!coinsData?.length){
+            console.warn('No coins to create for this level');
             this.nextLevel();
             return;
         }
@@ -163,7 +167,7 @@ class LevelLoader {
             this.scene.physics.world.colliders.destroy();
         }
 
-        if (this.scene.coins) {
+        if (this.scene.coins instanceof Phaser.GameObjects.Group && this.scene.coins.getLength() > 0) {
             this.scene.physics.add.overlap(
                 this.scene.ball, 
                 this.scene.coins, 
@@ -173,7 +177,7 @@ class LevelLoader {
             );
         }
 
-        if (this.scene.obstacles) {
+        if (this.scene.obstacles instanceof Phaser.GameObjects.Group && this.scene.obstacles.getLength() > 0) {
             this.scene.physics.add.collider(
                 this.scene.ball, 
                 this.scene.obstacles, 
@@ -190,10 +194,12 @@ class LevelLoader {
         this.currentLevel++;
         if (this.currentLevel <= this.levelsData.levels.length) {
             console.log('Loading next level:', this.currentLevel);
-            this.loadLevel(this.currentLevel);
+            this.scene.time.delayedCall(100, () => this.loadLevel(this.currentLevel)); // Add delay
         } else {
             console.log('Going to EndScene');
-            this.scene.scene.start('EndScene');
+            this.scene.time.delayedCall(100, () => {
+                this.scene.scene.start('MenuScene');
+            });
         }
     }
 
