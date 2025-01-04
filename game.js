@@ -23,7 +23,8 @@ window.addEventListener('load', function() {
                 // Fit to window
                 mode: Phaser.Scale.FIT,
                 // Center vertically and horizontally
-                autoCenter: Phaser.Scale.CENTER_BOTH
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                orientation: Phaser.Scale.LANDSCAPE // Force landscape mode
             },
             physics: {
                 default: 'arcade',

@@ -130,3 +130,48 @@ li:before {
         color: #333;
     }
 }
+
+
+#rotation-message {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+#rotation-message i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ffff00;
+}
+
+/* Portrait mode handling */
+@media screen and (orientation: portrait) {
+    #rotation-message {
+        display: flex;
+        flex-direction: column;
+    }
+    .container {
+        display: none;
+    }
+}
+
+/* Landscape mode handling */
+@media screen and (orientation: landscape) {
+    #rotation-message {
+        display: none;
+    }
+    .container {
+        display: flex;
+    }
+}

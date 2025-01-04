@@ -2,16 +2,28 @@ const GameMenu = () => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const hasGyroscope = window.DeviceOrientationEvent;
-    
+
     // For mobile, force gyroscope if available
     const [controlType, setControlType] = React.useState(() => {
+        const savedControl = localStorage.getItem('controlType');
         if (isMobile && hasGyroscope) {
             return 'gyroscope';
         }
-        return localStorage.getItem('controlType') || 'keyboard';
+        return savedControl || 'keyboard';
     });
 
-    // Add this useEffect here
+    // Initialize controls on component mount
+    React.useEffect(() => {
+        // Save to localStorage
+        localStorage.setItem('controlType', controlType);
+        
+        // Dispatch event to set up controls
+        window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
+            detail: { controlType: controlType } 
+        }));
+    }, []); // Empty dependency array means this runs once on mount
+
+    // Cleanup on unmount
     React.useEffect(() => {
         return () => {
             window.gameControls?.resumeGame();
@@ -40,8 +52,8 @@ const GameMenu = () => {
     };
 
     const handleControlChange = (newControl) => {
-        // Don't allow control changes on mobile
-        if (isMobile) return;
+        // Only allow control changes on desktop or if explicitly enabling gyroscope
+        if (isMobile && newControl !== 'gyroscope') return;
         
         setControlType(newControl);
         localStorage.setItem('controlType', newControl);

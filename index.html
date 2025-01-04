@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Maze Runner</title>
+
+    <!-- PWA meta tags -->
     <link rel="manifest" href="manifest.json">
-    <!-- Your existing head content -->
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Maze Runner">
+
+    <!-- Icons -->
     <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png">
-    <!-- For iOS devices -->
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+
+
     <!-- Phaser -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
     <!-- React -->
@@ -17,19 +25,27 @@
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <div id="rotation-message">
+        <i class="fas fa-mobile-screen-button fa-rotate-90" style="font-size: 48px; margin-bottom: 15px;"></i>
+        <p>Please rotate your device to landscape mode</p>
+    </div>
+
     <div id="game">
         <div id="game-menu"></div>
     </div>
+    <button id="install-button">Install Game</button>
     <!-- <script src="src/utils/LevelLoader.js"></script>
     <script src="src/controllers/InputController.js"></script>
     <script src="src/components/GameMenu.js"></script>
     <script src="src/scenes/MenuScene.js"></script>
     <script src="src/scenes/InstructionScene.js"></script>
     <script src="src/scenes/GameScene.js"></script> -->
-
+    <script src="register-sw.js"></script>
     <script type="module" src="game.js"></script>
 </body>
 </html>

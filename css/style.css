@@ -32,3 +32,63 @@ body {
 #game-menu button {
     pointer-events: auto;
 }
+
+#install-button {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 20px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Rotation message styles */
+#rotation-message {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+#rotation-message i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ffff00;
+}
+
+/* Only show rotation message in portrait mode */
+@media screen and (orientation: portrait) {
+    #rotation-message {
+        display: flex;
+        flex-direction: column;
+    }
+    #game {
+        display: none;
+    }
+}
+
+/* Hide rotation message in landscape */
+@media screen and (orientation: landscape) {
+    #rotation-message {
+        display: none;
+    }
+    #game {
+        display: block;
+    }
+}

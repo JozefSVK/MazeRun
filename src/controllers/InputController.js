@@ -29,7 +29,7 @@ class InputController {
         });
     }
 
-    setupControls() {
+    async setupControls() {
         this.cleanupControls();
         
         switch (this.activeControl) {
@@ -38,8 +38,22 @@ class InputController {
                 break;
             case 'gyroscope':
                 if (window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
-                    this.gyroEnabled = true;
+                    try {
+                        // iOS requires permission request
+                        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                            const permission = await DeviceOrientationEvent.requestPermission();
+                            if (permission === 'granted') {
+                                window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
+                                this.gyroEnabled = true;
+                            }
+                        } else {
+                            // Android and other devices
+                            window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
+                            this.gyroEnabled = true;
+                        }
+                    } catch (error) {
+                        console.error('Gyroscope permission error:', error);
+                    }
                 }
                 break;
             case 'keyboard':
@@ -112,11 +126,27 @@ class InputController {
     handleOrientation(event) {
         if (!this.gyroEnabled) return;
 
-        const x = event.gamma;
-        const y = event.beta;
+        // For landscape, we use beta (y) for x-axis and gamma (x) for y-axis
+        // Multiply by -1 to correct directions
+        const speed = 20;
+        // Check if the game is in landscape mode
+        const isLandscape = window.innerWidth > window.innerHeight;
+
+        let x, y;
+
+        if (isLandscape) {
+            // Swap beta and gamma for landscape
+            x = event.gamma * -1; // gamma controls X-axis in landscape
+            y = event.beta;       // beta controls Y-axis in landscape
+        } else {
+            // Standard portrait mode
+            x = event.beta * -1;  // beta controls X-axis in portrait
+            y = event.gamma * -1; // gamma controls Y-axis in portrait
+        }
+        
         if (x != null && y != null) {
-            this.scene.ball.body.setVelocityX(x * 20);
-            this.scene.ball.body.setVelocityY(y * 20);
+            this.scene.ball.body.setVelocityX(y * speed);
+            this.scene.ball.body.setVelocityY(x * speed);
         }
     }
 

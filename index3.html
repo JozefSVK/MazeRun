@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gyroscope Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+        .label {
+            font-size: 16px;
+            color: #666;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gyroscope Data</h1>
+        <div id="status"></div>
+        
+        <div class="data-section">
+            <h2>Rotation Rate</h2>
+            <div class="label">Alpha (z-axis):</div>
+            <div id="alpha" class="value">0</div>
+            
+            <div class="label">Beta (x-axis):</div>
+            <div id="beta" class="value">0</div>
+            
+            <div class="label">Gamma (y-axis):</div>
+            <div id="gamma" class="value">0</div>
+        </div>
+
+        <div class="data-section">
+            <h2>Raw Data</h2>
+            <pre id="rawData"></pre>
+        </div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const alphaDisplay = document.getElementById('alpha');
+        const betaDisplay = document.getElementById('beta');
+        const gammaDisplay = document.getElementById('gamma');
+        const rawDataDisplay = document.getElementById('rawData');
+
+        function showStatus(message, isError = false) {
+            statusDiv.textContent = message;
+            statusDiv.className = isError ? 'error' : 'success';
+        }
+
+        function handleOrientation(event) {
+            // Round values to 2 decimal places
+            const alpha = event.alpha ? event.alpha.toFixed(2) : 0;
+            const beta = event.beta ? event.beta.toFixed(2) : 0;
+            const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
+
+            // Update displays
+            alphaDisplay.textContent = `${alpha}°`;
+            betaDisplay.textContent = `${beta}°`;
+            gammaDisplay.textContent = `${gamma}°`;
+
+            // Show raw data
+            rawDataDisplay.textContent = JSON.stringify(event, null, 2);
+        }
+
+        function startGyroscope() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && 
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS 13+ devices need to request permission
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            showStatus('Gyroscope activated!');
+                        } else {
+                            showStatus('Permission denied', true);
+                        }
+                    })
+                    .catch(error => {
+                        showStatus('Error requesting permission: ' + error, true);
+                    });
+            } else {
+                // Non iOS 13+ devices
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                    showStatus('Gyroscope activated!');
+                } else {
+                    showStatus('Gyroscope not available on this device', true);
+                }
+            }
+        }
+
+        // Start gyroscope immediately when page loads
+        if (!window.DeviceOrientationEvent) {
+            showStatus('Device orientation not supported on this device', true);
+        } else {
+            startGyroscope();
+        }
+    </script>
+</body>
+</html>
