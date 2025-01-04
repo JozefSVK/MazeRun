@@ -263,9 +263,6 @@ class LevelLoader {
             this.scene.physics.add.collider(
                 this.scene.ball, 
                 this.scene.obstacles, 
-                this.scene.hitObstacle, 
-                null, 
-                this.scene
             );
         }
 

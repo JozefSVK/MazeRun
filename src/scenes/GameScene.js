@@ -212,20 +212,20 @@ class GameScene extends Phaser.Scene {
         }       
     }
 
-    hitObstacle(ball, obstacle) {
-        if (!this.levelLoader) return;
-        // Reset ball position to level start
-        const currentLevel  = this.levelLoader.levelsData.levels.find(l => l.id === this.levelLoader.currentLevel);
-        if (currentLevel ) {
-            const relX = currentLevel .player.x / this.levelLoader.BASE_WIDTH;
-            const relY = currentLevel .player.y / this.levelLoader.BASE_HEIGHT;
-            this.ball.setPosition(
-                this.gameWidth * relX,
-                this.gameHeight * relY
-            );
-            this.ball.body.setVelocity(0, 0);
-        }
-    }
+    // hitObstacle(ball, obstacle) {
+    //     if (!this.levelLoader) return;
+    //     // Reset ball position to level start
+    //     const currentLevel  = this.levelLoader.levelsData.levels.find(l => l.id === this.levelLoader.currentLevel);
+    //     if (currentLevel ) {
+    //         const relX = currentLevel .player.x / this.levelLoader.BASE_WIDTH;
+    //         const relY = currentLevel .player.y / this.levelLoader.BASE_HEIGHT;
+    //         this.ball.setPosition(
+    //             this.gameWidth * relX,
+    //             this.gameHeight * relY
+    //         );
+    //         this.ball.body.setVelocity(0, 0);
+    //     }
+    // }
 
     hitTrap(ball, traps) {
         if (!this.levelLoader) return;
