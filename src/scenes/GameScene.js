@@ -8,7 +8,7 @@ class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
         // Scene-specific variables
-        this.ball = null;
+        this.player = null;
         this.coins = null;
         this.traps = null;
         this.obstacles = null;
@@ -191,25 +191,31 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    collectCoin(ball, coin) {
+    collectCoin(player, coin) {
+        // First get the length before destroying the coin
+        const coinsRemaining = this.coins?.getLength() || 0;
+        
         console.log('Coin collected', {
-            coinsLeft: this.coins?.getLength(),
+            coinsLeft: coinsRemaining - 1,  // Subtract 1 since we're about to destroy this coin
             levelLoader: !!this.levelLoader
         });
         
-        coin.destroy();
-        this.coinsCollected++;
-        this.updateScore();
+        // Safely destroy the coin
+        if (coin && !coin.isDestroyed) {
+            coin.destroy();  // This will trigger the cleanup process
+            this.coinsCollected++;
+            this.updateScore();
+        }
         
-        if (this.coins?.getLength() === 0 && this.levelLoader) {
+        // Check if this was the last coin
+        if (coinsRemaining <= 1 && this.levelLoader) {  // Use 1 instead of 0 since we just destroyed a coin
             console.log('All coins collected, starting fade out');
-            // Instead of immediately going to next level, fade out first
             this.fadeOut(() => {
                 if (this.levelLoader) {
                     this.levelLoader.nextLevel();
                 }
             });
-        }       
+        } 
     }
 
     // hitObstacle(ball, obstacle) {
@@ -229,21 +235,6 @@ class GameScene extends Phaser.Scene {
 
     hitTrap(ball, traps) {
         if (!this.levelLoader) return;
-        // Store current position for the smoke effect
-        const currentX = ball.x;
-        const currentY = ball.y;
-        
-        // Hide the ball temporarily
-        ball.setVisible(false);
-        
-        // Emit smoke particles at the collision point
-        if (this.smokeEmitter) {
-            this.smokeEmitter.setPosition(currentX, currentY);
-            this.smokeEmitter.explode();
-        }
-        
-        // Add screen shake
-        this.cameras.main.shake(200, 0.01);
         
         // Get respawn position
         const currentLevel = this.levelLoader.levelsData.levels.find(
@@ -254,30 +245,11 @@ class GameScene extends Phaser.Scene {
             const relX = currentLevel.player.x / this.levelLoader.BASE_WIDTH;
             const relY = currentLevel.player.y / this.levelLoader.BASE_HEIGHT;
             
-            // Use a timer to delay the repositioning and reappearance
-            this.time.delayedCall(300, () => {
-                ball.setPosition(
-                    this.gameWidth * relX,
-                    this.gameHeight * relY
-                );
-                ball.body.setVelocity(0, 0);
-                
-                // Create a small puff of smoke at the respawn point
-                if (this.smokeEmitter) {
-                    this.smokeEmitter.setPosition(this.gameWidth * relX, this.gameHeight * relY);
-                    this.smokeEmitter.explode(10); // Smaller puff for respawn
-                }
-                
-                // Make the ball visible again with a fade effect
-                ball.setAlpha(0);
-                ball.setVisible(true);
-                this.tweens.add({
-                    targets: ball,
-                    alpha: 1,
-                    duration: 200,
-                    ease: 'Linear'
-                });
-            });
+            // Use player's handleTrapHit method
+            this.player.handleTrapHit(
+                this.gameWidth * relX,
+                this.gameHeight * relY
+            );
         }
     }
 
@@ -320,6 +292,11 @@ class GameScene extends Phaser.Scene {
         if(this.smokeEmitter){
             this.smokeEmitter.stop();
             this.smokeEmitter = null;
+        }
+
+        if (this.ballVisual) {
+            this.ballVisual.destroy();
+            this.ballVisual = null;
         }
 
         this.tweens.killAll();

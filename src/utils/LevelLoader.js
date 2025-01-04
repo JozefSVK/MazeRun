@@ -1,6 +1,7 @@
 import Coin from "../entities/Coin.js"
+import Player from "../entities/Player.js";
 import Storage from '../utils/Storage.js';
-import { SpikeBall, RotatingBlade } from "../entities/traps.js"; 
+import { SpikeBall, RotatingBlade, CollisionCategories } from "../entities/traps.js"; 
 
 class LevelLoader {
     constructor(scene) {
@@ -45,6 +46,7 @@ class LevelLoader {
         this.scene.updateScore();  // Update the display
 
         this.createPlayer(level.player);
+        this.createWorldBounds();
         this.createCoins(level.coins);
         this.createObstacles(level.obstacles);
         this.createTraps(level.traps)
@@ -83,6 +85,11 @@ class LevelLoader {
             this.scene.ball.destroy();
             this.scene.ball = null;
         }
+
+        if (this.scene.player) {
+            this.scene.player.cleanup();
+            this.scene.player = null;
+        }
     }
 
     nextLevel() {
@@ -119,14 +126,52 @@ class LevelLoader {
         const relY = playerData.y / this.BASE_HEIGHT;
         const size = Math.min(this.gameWidth, this.gameHeight) * 0.025;
 
-        this.scene.ball = this.scene.add.circle(
+        this.scene.player = new Player(
+            this.scene,
             this.gameWidth * relX,
             this.gameHeight * relY,
-            size,
-            0xff0000
+            size
         );
-        this.scene.physics.add.existing(this.scene.ball);
-        this.scene.ball.body.setCollideWorldBounds(true);
+    }
+
+    createWorldBounds() {
+        const wallThickness = 100;
+        const wallOptions = {
+            isStatic: true,
+            label: 'boundary',
+            collisionFilter: {
+                category: CollisionCategories.OBSTACLE,
+                mask: CollisionCategories.PLAYER
+            }
+        };
+    
+        // Top wall
+        this.scene.matter.add.rectangle(
+            this.gameWidth / 2, -wallThickness / 2,
+            this.gameWidth + wallThickness * 2, wallThickness,
+            wallOptions
+        );
+    
+        // Bottom wall
+        this.scene.matter.add.rectangle(
+            this.gameWidth / 2, this.gameHeight + wallThickness / 2,
+            this.gameWidth + wallThickness * 2, wallThickness,
+            wallOptions
+        );
+    
+        // Left wall
+        this.scene.matter.add.rectangle(
+            -wallThickness / 2, this.gameHeight / 2,
+            wallThickness, this.gameHeight + wallThickness * 2,
+            wallOptions
+        );
+    
+        // Right wall
+        this.scene.matter.add.rectangle(
+            this.gameWidth + wallThickness / 2, this.gameHeight / 2,
+            wallThickness, this.gameHeight + wallThickness * 2,
+            wallOptions
+        );
     }
 
     createCoins(coinsData) {
@@ -190,6 +235,7 @@ class LevelLoader {
             const relWidth = obstacleData.width / this.BASE_WIDTH;
             const relHeight = obstacleData.height / this.BASE_HEIGHT;
 
+            // Create the rectangle visual
             const obstacle = this.scene.add.rectangle(
                 this.gameWidth * relX,
                 this.gameHeight * relY,
@@ -197,7 +243,27 @@ class LevelLoader {
                 this.gameHeight * relHeight,
                 0x0000ff
             );
-            this.scene.physics.add.existing(obstacle, true);
+
+            // Add Matter.js physics body
+            const physicsBody = this.scene.matter.add.rectangle(
+                this.gameWidth * relX,
+                this.gameHeight * relY,
+                this.gameWidth * relWidth,
+                this.gameHeight * relHeight,
+                {
+                    isStatic: true,  // Make the obstacle immovable
+                    label: 'obstacle',  // Label for collision detection
+                    collisionFilter: {
+                        category: CollisionCategories.OBSTACLE,
+                        mask: CollisionCategories.PLAYER
+                    }
+                }
+            );
+
+            // Store reference to the physics body
+            obstacle.physicsBody = physicsBody;
+            physicsBody.gameObject = obstacle;
+
             this.scene.obstacles.add(obstacle);
         });
     }
@@ -244,38 +310,39 @@ class LevelLoader {
     }
 
     setupCollisions() {
-        // Clear existing colliders/overlaps
-        if (this.scene.physics.world) {
-            this.scene.physics.world.colliders.destroy();
-        }
-
-        if (this.scene.coins instanceof Phaser.GameObjects.Group && this.scene.coins.getLength() > 0) {
-            this.scene.physics.add.overlap(
-                this.scene.ball, 
-                this.scene.coins, 
-                this.scene.collectCoin, 
-                null, 
-                this.scene
-            );
-        }
-
-        if (this.scene.obstacles instanceof Phaser.GameObjects.Group && this.scene.obstacles.getLength() > 0) {
-            this.scene.physics.add.collider(
-                this.scene.ball, 
-                this.scene.obstacles, 
-            );
-        }
-
-        // Add this to your setupCollisions method
-        if (this.scene.traps && this.scene.ball) {
-            this.scene.physics.add.collider(
-                this.scene.ball,
-                this.scene.traps,
-                this.scene.hitTrap,
-                null,
-                this.scene
-            );
-        }
+        this.scene.matter.world.on('collisionstart', (event) => {
+            event.pairs.forEach((pair) => {
+                const bodyA = pair.bodyA;
+                const bodyB = pair.bodyB;
+    
+                // Check if either body is a coin
+                const coinBody = bodyA.label === 'coin' ? bodyA : 
+                               bodyB.label === 'coin' ? bodyB : null;
+                const playerBody = bodyA.label === 'player' ? bodyA : 
+                                 bodyB.label === 'player' ? bodyB : null;
+    
+                if (coinBody && playerBody) {
+                    const coin = coinBody.gameObject;
+                    if (coin && !coin.isDestroyed) {
+                        this.scene.collectCoin(this.scene.player, coin);
+                    }
+                }
+    
+                // Check for trap collision
+                const isTrapA = bodyA.label.includes('blade') || bodyA.label.includes('spikeball');
+                const isTrapB = bodyB.label.includes('blade') || bodyB.label.includes('spikeball');
+    
+                if ((isTrapA || isTrapB) && playerBody) {
+                    // Get the trap gameObject from its parent body
+                    const trapBody = isTrapA ? bodyA : bodyB;
+                    const trap = trapBody.parent.gameObject;
+                    
+                    if (trap) {
+                        this.scene.hitTrap(this.scene.player, trap);
+                    }
+                }
+            });
+        });
     }
 
     

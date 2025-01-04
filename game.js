@@ -27,10 +27,10 @@ window.addEventListener('load', function() {
                 orientation: Phaser.Scale.LANDSCAPE // Force landscape mode
             },
             physics: {
-                default: 'arcade',
-                arcade: {
+                default: 'matter',
+                matter: {
                     gravity: { y: 0 },
-                    debug: false
+                    debug: true
                 }
             },
             scene: [MenuScene, GameScene, InstructionsScene, TransitionScene, EndScene]
