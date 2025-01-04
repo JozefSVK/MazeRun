@@ -12,9 +12,14 @@ class InputController {
         this.gyroEnabled = false;
 
         // Force settings for Matter.js
-        this.forceMultiplier = 0.0001; // Adjust this value to control movement speed
+        this.forceMultiplier = 0.0002; // Adjust this value to control movement speed
         this.gyroForceMultiplier = 0.00002;
         this.maxForce = 0.01;          // Maximum force that can be applied
+
+        // Add acceleration handling
+        this.currentForce = { x: 0, y: 0 };
+        this.acceleration = 0.2;           // How quickly force builds up
+        this.deceleration = 0.15;          // How quickly force decreases
 
         // Joystick variables
         this.isDragging = false;
@@ -32,6 +37,22 @@ class InputController {
             this.activeControl = event.detail.controlType;
             this.setupControls();
         });
+
+
+        // Adjust force multiplier for gyroscope
+        this.gyroForceMultiplier = 0.0003; // Increased base force
+        // Add gyroscope smoothing properties
+        this.gyroValues = {
+            x: 0,
+            y: 0
+        };
+        this.smoothingFactor = 0.2; // Lower = smoother but more latency
+        this.gyroThreshold = 0.1;   // Minimum change required to register movement
+        this.maxGyroAngle = 45;     // Maximum angle to consider for input
+
+        // Add acceleration curve parameters
+        this.minBoostThreshold = 15;   // Angle at which boost starts
+        this.boostMultiplier = 2.5;    // How much extra force to apply during boost
     }
 
     async setupControls() {
@@ -132,50 +153,65 @@ class InputController {
         if (!this.gyroEnabled || !this.player) return;
 
         const isLandscape = window.innerWidth > window.innerHeight;
-        let x, y;
+        let rawX, rawY;
 
         if (isLandscape) {
-            x = event.gamma * -1;
-            y = event.beta;
+            rawX = event.gamma * -1;
+            rawY = event.beta;
         } else {
-            x = event.beta * -1;
-            y = event.gamma * -1;
+            rawX = event.beta * -1;
+            rawY = event.gamma * -1;
         }
-        
-        if (x != null && y != null) {
-            // Apply force instead of velocity for Matter.js
+
+        if (rawX != null && rawY != null) {
+            // Clamp values to max angle
+            rawX = Math.max(Math.min(rawX, this.maxGyroAngle), -this.maxGyroAngle);
+            rawY = Math.max(Math.min(rawY, this.maxGyroAngle), -this.maxGyroAngle);
+
+            // Smooth the values
+            this.gyroValues.x += (rawX - this.gyroValues.x) * this.smoothingFactor;
+            this.gyroValues.y += (rawY - this.gyroValues.y) * this.smoothingFactor;
+
+            // Apply dead zone
+            let x = Math.abs(this.gyroValues.x) < this.gyroThreshold ? 0 : this.gyroValues.x;
+            let y = Math.abs(this.gyroValues.y) < this.gyroThreshold ? 0 : this.gyroValues.y;
+
+            // Calculate boost based on tilt angle
+            const xBoost = Math.abs(x) > this.minBoostThreshold ? this.boostMultiplier : 1;
+            const yBoost = Math.abs(y) > this.minBoostThreshold ? this.boostMultiplier : 1;
+
+            // Apply non-linear acceleration curve
+            x = Math.sign(x) * Math.pow(Math.abs(x) / this.maxGyroAngle, 1.5) * xBoost;
+            y = Math.sign(y) * Math.pow(Math.abs(y) / this.maxGyroAngle, 1.5) * yBoost;
+
+            // Apply force with boosted values
             const force = {
                 x: y * this.gyroForceMultiplier,
                 y: x * this.gyroForceMultiplier
             };
-            // Apply force directly to the player
-            this.player.applyForce(force);
+
+            // Apply additional boost for quick movements
+            if (Math.abs(rawX - this.gyroValues.x) > 10 || Math.abs(rawY - this.gyroValues.y) > 10) {
+                force.x *= 1.5;
+                force.y *= 1.5;
+            }
+
+            // Only apply force if it's significant enough
+            if (Math.abs(force.x) > 0.00001 || Math.abs(force.y) > 0.00001) {
+                this.player.applyForce(force);
+            }
         }
+    }
 
-        // if (!this.gyroEnabled) return;
-
-        // // For landscape, we use beta (y) for x-axis and gamma (x) for y-axis
-        // // Multiply by -1 to correct directions
-        // const speed = 20;
-        // // Check if the game is in landscape mode
-        // const isLandscape = window.innerWidth > window.innerHeight;
-
-        // let x, y;
-
-        // if (isLandscape) {
-        //     // Swap beta and gamma for landscape
-        //     x = event.gamma * -1; // gamma controls X-axis in landscape
-        //     y = event.beta;       // beta controls Y-axis in landscape
-        // } else {
-        //     // Standard portrait mode
-        //     x = event.beta * -1;  // beta controls X-axis in portrait
-        //     y = event.gamma * -1; // gamma controls Y-axis in portrait
-        // }
-        
-        // if (x != null && y != null) {
-        //     this.scene.ball.body.setVelocityX(y * speed);
-        //     this.scene.ball.body.setVelocityY(x * speed);
-        // }
+    // Helper method to calculate velocity-based force scaling
+    getVelocityScale(velocity) {
+        const currentSpeed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        if (currentSpeed < 2) {
+            return 1.5; // Boost at low speeds
+        } else if (currentSpeed < 5) {
+            return 1.2; // Moderate boost at medium speeds
+        }
+        return 1; // Normal force at high speeds
     }
 
     update() {
@@ -195,20 +231,26 @@ class InputController {
     updateKeyboard() {
         if (!this.cursors || !this.player) return;
 
-        let forceX = 0;
-        let forceY = 0;
+        // Target force based on input
+        const targetForce = {
+            x: 0,
+            y: 0
+        };
 
-        if (this.cursors.left.isDown) forceX = -this.forceMultiplier;
-        else if (this.cursors.right.isDown) forceX = this.forceMultiplier;
+        if (this.cursors.left.isDown) targetForce.x = -this.forceMultiplier;
+        else if (this.cursors.right.isDown) targetForce.x = this.forceMultiplier;
 
-        if (this.cursors.up.isDown) forceY = -this.forceMultiplier;
-        else if (this.cursors.down.isDown) forceY = this.forceMultiplier;
+        if (this.cursors.up.isDown) targetForce.y = -this.forceMultiplier;
+        else if (this.cursors.down.isDown) targetForce.y = this.forceMultiplier;
 
-        // Apply force to the Matter.js body
-        if (forceX !== 0 || forceY !== 0) {
-            this.scene.player.applyForce({ x: forceX, y: forceY });
+        // Smoothly interpolate current force towards target force
+        this.currentForce.x = this.interpolateForce(this.currentForce.x, targetForce.x);
+        this.currentForce.y = this.interpolateForce(this.currentForce.y, targetForce.y);
+
+        // Apply the interpolated force
+        if (this.currentForce.x !== 0 || this.currentForce.y !== 0) {
+            this.player.applyForce(this.currentForce);
         }
-
         // if (!this.cursors) return;
 
         // const velocity = { x: 0, y: 0 };
@@ -222,6 +264,17 @@ class InputController {
         // this.scene.ball.body.setVelocity(velocity.x, velocity.y);
     }
 
+    // Helper method for smooth force interpolation
+    interpolateForce(current, target) {
+        if (target !== 0) {
+            // Accelerate
+            return current + (target - current) * this.acceleration;
+        } else {
+            // Decelerate
+            return current * (1 - this.deceleration);
+        }
+    }
+
     updateJoystick() {
         if (!this.isDragging || !this.player) return;
         // if (!this.isDragging) return;
@@ -232,12 +285,16 @@ class InputController {
         
         const normalizedX = dx / Math.max(distance, this.joystickRadius);
         const normalizedY = dy / Math.max(distance, this.joystickRadius);
+
+        // Apply quadratic scaling for finer control at low values and more power at high values
+        const scaledX = Math.sign(normalizedX) * (normalizedX * normalizedX);
+        const scaledY = Math.sign(normalizedY) * (normalizedY * normalizedY);
         
         // this.scene.ball.body.setVelocity(normalizedX * 160, normalizedY * 160);
         // Apply force instead of velocity
         const force = {
-            x: normalizedX * this.forceMultiplier,
-            y: normalizedY * this.forceMultiplier
+            x: scaledX * this.forceMultiplier,
+            y: scaledY * this.forceMultiplier
         };
 
         // Apply force directly to the player

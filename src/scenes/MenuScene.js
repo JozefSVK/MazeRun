@@ -58,7 +58,7 @@ class MenuScene extends Phaser.Scene {
             const levelToStart = Storage.getCurrentLevel();
             const displayLevel = Storage.getLevelCount();
             this.scene.start('TransitionScene', { 
-                nextLevel: 4,
+                nextLevel: levelToStart,
                 displayLevel: displayLevel 
             });
         });

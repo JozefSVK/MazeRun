@@ -29,8 +29,10 @@ window.addEventListener('load', function() {
             physics: {
                 default: 'matter',
                 matter: {
-                    gravity: { y: 0 },
-                    debug: true
+                    gravity: { y: 0,
+                        x: 0
+                     },
+                    debug: false
                 }
             },
             scene: [MenuScene, GameScene, InstructionsScene, TransitionScene, EndScene]

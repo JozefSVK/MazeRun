@@ -130,7 +130,14 @@ class RotatingBlade extends Phaser.GameObjects.Container {
             rotationSpeed = 2000
         } = config;
 
-        this.rotationSpeed = (Math.PI * 2) / (rotationSpeed / 1000 * 60);
+        // Check if running on mobile and adjust speed
+        const isMobile = scene.sys.game.device.os.android || 
+                        scene.sys.game.device.os.iOS || 
+                        scene.sys.game.device.os.windowsPhone;
+
+        // Apply 50% speed reduction on mobile
+        const adjustedSpeed = isMobile ? rotationSpeed * 2 : rotationSpeed;
+        this.rotationSpeed = (Math.PI * 2) / (adjustedSpeed / 1000 * 60);
         
         // Calculate dimensions
         const halfWidth = width / 2;
@@ -161,6 +168,9 @@ class RotatingBlade extends Phaser.GameObjects.Container {
         const bladeBody = scene.matter.add.fromVertices(x, y, [bladePoints], {
             isStatic: true,
             label: 'blade_edge',
+            friction: 0,           // No friction to prevent "catching"
+            restitution: 0,       // No bounce
+            density: 0.001,       // Low density
             collisionFilter: {
                 category: CollisionCategories.TRAP,
                 mask: CollisionCategories.PLAYER
@@ -171,6 +181,9 @@ class RotatingBlade extends Phaser.GameObjects.Container {
         const centerBody = scene.matter.add.circle(x, y, circleRadius, {
             isStatic: true,
             label: 'blade_center',
+            friction: 0,           // No friction to prevent "catching"
+            restitution: 0,       // No bounce
+            density: 0.001,       // Low density
             collisionFilter: {
                 category: CollisionCategories.TRAP,
                 mask: CollisionCategories.PLAYER

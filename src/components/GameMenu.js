@@ -3,27 +3,21 @@ const GameMenu = () => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const hasGyroscope = window.DeviceOrientationEvent;
 
-    // For mobile, force gyroscope if available
     const [controlType, setControlType] = React.useState(() => {
         const savedControl = localStorage.getItem('controlType');
         if (isMobile && hasGyroscope) {
-            return 'gyroscope';
+            return savedControl || 'gyroscope';
         }
         return savedControl || 'keyboard';
     });
 
-    // Initialize controls on component mount
     React.useEffect(() => {
-        // Save to localStorage
         localStorage.setItem('controlType', controlType);
-        
-        // Dispatch event to set up controls
         window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
             detail: { controlType: controlType } 
         }));
-    }, []); // Empty dependency array means this runs once on mount
+    }, [controlType]);
 
-    // Cleanup on unmount
     React.useEffect(() => {
         return () => {
             window.gameControls?.resumeGame();
@@ -52,14 +46,7 @@ const GameMenu = () => {
     };
 
     const handleControlChange = (newControl) => {
-        // Only allow control changes on desktop or if explicitly enabling gyroscope
-        if (isMobile && newControl !== 'gyroscope') return;
-        
         setControlType(newControl);
-        localStorage.setItem('controlType', newControl);
-        window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
-            detail: { controlType: newControl } 
-        }));
     };
 
     return React.createElement("div", null, [
@@ -91,64 +78,107 @@ const GameMenu = () => {
                     key: "menu-title"
                 }, "Game Menu"),
 
-                // Only show controls section for desktop
-                !isMobile && [
-                    // Controls section
-                    React.createElement("h3", {
-                        className: "text-lg font-semibold text-gray-700 mb-4",
-                        key: "controls-title"
-                    }, "Controls"),
+                // Controls section header
+                React.createElement("h3", {
+                    className: "text-lg font-semibold text-gray-700 mb-4",
+                    key: "controls-title"
+                }, "Controls"),
 
-                    // Controls container
-                    React.createElement("div", {
-                        className: "flex justify-center gap-8 mb-6",
-                        key: "controls"
+                // Desktop Controls
+                !isMobile && React.createElement("div", {
+                    className: "flex justify-center gap-8 mb-6",
+                    key: "desktop-controls"
+                }, [
+                    React.createElement("button", {
+                        onClick: () => handleControlChange('keyboard'),
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'keyboard' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "keyboard"
                     }, [
-                        // Keyboard control
-                        React.createElement("button", {
-                            onClick: () => handleControlChange('keyboard'),
-                            className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
-                                controlType === 'keyboard' 
-                                    ? 'bg-blue-100 text-blue-600' 
-                                    : 'hover:bg-gray-100'
-                            }`,
-                            key: "keyboard"
-                        }, [
-                            React.createElement("i", { 
-                                className: "fas fa-keyboard text-3xl mb-2"
-                            }),
-                            React.createElement("span", { 
-                                className: "text-sm"
-                            }, "Keyboard")
-                        ]),
-
-                        // Mouse control
-                        React.createElement("button", {
-                            onClick: () => handleControlChange('mouse'),
-                            className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
-                                controlType === 'mouse' 
-                                    ? 'bg-blue-100 text-blue-600' 
-                                    : 'hover:bg-gray-100'
-                            }`,
-                            key: "mouse"
-                        }, [
-                            React.createElement("i", { 
-                                className: "fas fa-mouse"
-                            }),
-                            React.createElement("span", { 
-                                className: "text-sm mt-2"
-                            }, "Mouse")
-                        ])
+                        React.createElement("i", { 
+                            className: "fas fa-keyboard text-3xl mb-2",
+                            key: "keyboard-icon"
+                        }),
+                        React.createElement("span", { 
+                            className: "text-sm",
+                            key: "keyboard-text"
+                        }, "Keyboard")
                     ]),
 
-                    // Divider
-                    React.createElement("hr", {
-                        className: "my-6 border-gray-200",
-                        key: "divider"
-                    })
-                ],
+                    React.createElement("button", {
+                        onClick: () => handleControlChange('mouse'),
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'mouse' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "mouse"
+                    }, [
+                        React.createElement("i", { 
+                            className: "fas fa-mouse text-3xl mb-2",
+                            key: "mouse-icon"
+                        }),
+                        React.createElement("span", { 
+                            className: "text-sm",
+                            key: "mouse-text"
+                        }, "Mouse")
+                    ])
+                ]),
 
-                // Buttons
+                // Mobile Controls
+                isMobile && React.createElement("div", {
+                    className: "flex justify-center gap-4 mb-6",
+                    key: "mobile-controls"
+                }, [
+                    hasGyroscope && React.createElement("button", {
+                        onClick: () => handleControlChange('gyroscope'),
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'gyroscope' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "gyroscope"
+                    }, [
+                        React.createElement("i", { 
+                            className: "fas fa-mobile-alt text-3xl mb-2",
+                            key: "gyro-icon"
+                        }),
+                        React.createElement("span", { 
+                            className: "text-sm",
+                            key: "gyro-text"
+                        }, "Gyroscope")
+                    ]),
+
+                    React.createElement("button", {
+                        onClick: () => handleControlChange('mouse'),
+                        className: `flex flex-col items-center p-4 rounded-lg transition-colors ${
+                            controlType === 'mouse' 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'hover:bg-gray-100'
+                        }`,
+                        key: "joystick"
+                    }, [
+                        React.createElement("i", { 
+                            className: "fas fa-gamepad text-3xl mb-2",
+                            key: "joystick-icon"
+                        }),
+                        React.createElement("span", { 
+                            className: "text-sm",
+                            key: "joystick-text"
+                        }, "Virtual Joystick")
+                    ])
+                ]),
+
+                // Divider
+                React.createElement("hr", {
+                    className: "my-6 border-gray-200",
+                    key: "divider"
+                }),
+
+                // Action Buttons
                 React.createElement("div", {
                     className: "flex flex-col gap-2",
                     key: "buttons"
