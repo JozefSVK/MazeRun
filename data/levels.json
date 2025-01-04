@@ -2,90 +2,228 @@
     "levels": [
         {
             "id": 1,
-            "name": "Level 1",
+            "name": "Custom Level",
             "player": {
                 "x": 50,
                 "y": 50
             },
             "coins": [
-                {"x": 200, "y": 100}
+                {"x": 300, "y": 100},
+                {"x": 640, "y": 300},
+                {"x": 1000, "y": 100},
+                {"x": 1200, "y": 600}
+            ],
+            "obstacles": [
+                {"x": 150, "y": 250, "width": 60, "height": 500},
+                {"x": 640, "y": 440, "width": 400, "height": 60},
+                {"x": 470, "y": 580, "width": 60, "height": 280},
+                {"x": 810, "y": 580, "width": 60, "height": 280},
+                {"x": 1100, "y": 450, "width": 60, "height": 540}
             ]
         },
         {
             "id": 2,
-            "name": "Level 2",
+            "name": "Custom Level",
             "player": {
                 "x": 50,
                 "y": 50
             },
             "coins": [
-                {"x": 200, "y": 100},
-                {"x": 400, "y": 200},
-                {"x": 600, "y": 400},
-                {"x": 300, "y": 400},
-                {"x": 500, "y": 500}
+                {"x": 220, "y": 100},
+                {"x": 1100, "y": 70},
+                {"x": 1210, "y": 500},
+                {"x": 800, "y": 680},
+                {"x": 370, "y": 400},
+                {"x": 1000, "y": 230},
+                {"x": 640, "y": 450}
             ],
             "obstacles": [
-                {"x": 200, "y": 200, "width": 200, "height": 20},
-                {"x": 400, "y": 400, "width": 20, "height": 200},
-                {"x": 600, "y": 300, "width": 200, "height": 20}
+                {"x": 150, "y": 300, "width": 60, "height": 600},
+                {"x": 300, "y": 420, "width": 60, "height": 600},
+                {"x": 720, "y": 150, "width": 900, "height": 60},
+                {"x": 1140, "y": 400, "width": 60, "height": 450},
+                {"x": 760, "y": 595, "width": 700, "height": 60},
+                {"x": 440, "y": 450, "width": 60, "height": 300},
+                {"x": 710, "y": 300, "width": 600, "height": 60}
             ]
         },
         {
             "id": 3,
-            "name": "Level 3",
-            "player": {
-                "x": 100,
-                "y": 100
-            },
-            "coins": [
-                {"x": 300, "y": 150},
-                {"x": 500, "y": 250},
-                {"x": 700, "y": 350},
-                {"x": 400, "y": 450},
-                {"x": 600, "y": 550}
-            ],
-            "obstacles": [
-                {"x": 300, "y": 300, "width": 300, "height": 20},
-                {"x": 500, "y": 500, "width": 20, "height": 300},
-                {"x": 700, "y": 400, "width": 300, "height": 20}
-            ]
-        },
-        {
-            "id": 4,
-            "name": "Trap Challenge",
+            "name": "Trap Chamber Level",
             "player": {
                 "x": 50,
                 "y": 50
             },
             "coins": [
-                {"x": 200, "y": 150},
-                {"x": 400, "y": 300},
-                {"x": 600, "y": 450},
-                {"x": 800, "y": 600},
-                {"x": 1000, "y": 300}
+                {"x": 1100, "y": 50},
+                {"x": 1190, "y": 580},
+                {"x": 200, "y": 650},
+                {"x": 200, "y": 350},
+                {"x": 700, "y": 340}
+            ],
+            "obstacles": [
+                {"x": 550, "y": 120, "width": 1100, "height": 60},
+                {"x": 1070, "y": 350, "width": 60, "height": 400},
+                {"x": 640, "y": 520, "width": 900, "height": 60}
+            ],
+            "traps": [
+                {"type": "spikeball", "x": 1220, "y": 50},
+                {"type": "spikeball", "x": 1220, "y": 670},
+                {"type": "spikeball", "x": 1150, "y": 670},
+                {"type": "spikeball", "x": 50, "y": 650},
+                {"type": "spikeball", "x": 50, "y": 550},
+                {"type": "spikeball", "x": 50, "y": 450},
+                {"type": "spikeball", "x": 50, "y": 350},
+                {"type": "spikeball", "x": 50, "y": 250},
+                {"type": "spikeball", "x": 150, "y": 200},
+                {"type": "spikeball", "x": 250, "y": 200},
+                {"type": "spikeball", "x": 350, "y": 200},
+                {"type": "spikeball", "x": 450, "y": 200},
+                {"type": "spikeball", "x": 550, "y": 200},
+                {"type": "spikeball", "x": 650, "y": 200},
+                {"type": "spikeball", "x": 750, "y": 200},
+                {"type": "spikeball", "x": 850, "y": 200},
+                {"type": "spikeball", "x": 950, "y": 200},
+                {"type": "spikeball", "x": 970, "y": 300},
+                {"type": "spikeball", "x": 970, "y": 400},
+                {"type": "spikeball", "x": 970, "y": 400},
+                {"type": "spikeball", "x": 900, "y": 440},
+                {"type": "spikeball", "x": 800, "y": 440},
+                {"type": "spikeball", "x": 700, "y": 440},
+                {"type": "spikeball", "x": 600, "y": 440},
+                {"type": "spikeball", "x": 500, "y": 440},
+                {"type": "spikeball", "x": 400, "y": 440},
+                {"type": "spikeball", "x": 300, "y": 440}
+
+            ]
+        },
+        {
+            "id": 4,
+            "name": "Trap Chamber Level",
+            "player": {
+                "x": 50,
+                "y": 300
+            },
+            "coins": [
+                {"x": 380, "y": 170},
+                {"x": 640, "y": 170},
+                {"x": 1000, "y": 360},
+                {"x": 510, "y": 500},
+                {"x": 50, "y": 500}
+            ],
+            "obstacles": [
+                {"x": 350, "y": 360, "width": 1100, "height": 60}
+            ],
+            "traps": [
+                {"type": "spikeball", "x": 200, "y": 280},
+                {"type": "spikeball", "x": 300, "y": 280},
+                {"type": "spikeball", "x": 250, "y": 200},
+
+                {"type": "spikeball", "x": 450, "y": 50},
+                {"type": "spikeball", "x": 550, "y": 50},
+                {"type": "spikeball", "x": 500, "y": 130},
+
+                {"type": "spikeball", "x": 750, "y": 280},
+                {"type": "spikeball", "x": 850, "y": 280},
+                {"type": "spikeball", "x": 800, "y": 200},
+
+                {"type": "spikeball", "x": 1230, "y": 310},
+                {"type": "spikeball", "x": 1230, "y": 410},
+                {"type": "spikeball", "x": 1150, "y": 360},
+
+
+                {"type": "spikeball", "x": 750, "y": 440},
+                {"type": "spikeball", "x": 850, "y": 440},
+                {"type": "spikeball", "x": 800, "y": 520},
+
+                {"type": "spikeball", "x": 450, "y": 680},
+                {"type": "spikeball", "x": 550, "y": 680},
+                {"type": "spikeball", "x": 500, "y": 600},
+
+
+                {"type": "spikeball", "x": 200, "y": 440},
+                {"type": "spikeball", "x": 300, "y": 440},
+                {"type": "spikeball", "x": 250, "y": 520}
+            ]
+        },
+        {
+            "id": 5,
+            "name": "Blade Runner Level",
+            "player": {
+                "x": 150,
+                "y": 360
+            },
+            "coins": [
+                {"x": 320, "y": 360},
+                {"x": 450, "y": 250},
+                {"x": 640, "y": 150},
+                {"x": 830, "y": 250},
+                {"x": 960, "y": 360},
+                {"x": 1150, "y": 360},
+                {"x": 830, "y": 450},
+                {"x": 640, "y": 550},
+                {"x": 450, "y": 450}
+            ],
+            "obstacles": [
+                {"x": 200, "y": 60, "width": 400, "height": 60},
+                {"x": 160, "y": 150, "width": 350, "height": 60},
+                {"x": 120, "y": 240, "width": 300, "height": 60},
+                {"x": 200, "y": 660, "width": 400, "height": 60},
+                {"x": 160, "y": 570, "width": 350, "height": 60},
+                {"x": 120, "y": 480, "width": 300, "height": 60},
+                {"x": 1080, "y": 60, "width": 400, "height": 60},
+                {"x": 1120, "y": 150, "width": 350, "height": 60},
+                {"x": 1160, "y": 240, "width": 300, "height": 60},
+                {"x": 1080, "y": 660, "width": 400, "height": 60},
+                {"x": 1120, "y": 570, "width": 350, "height": 60},
+                {"x": 1160, "y": 480, "width": 300, "height": 60}
+
             ],
             "traps": [
                 {
-                    "type": "spikeball",
-                    "x": 400,
-                    "y": 400
-                },
-                {
                     "type": "rotatingblade",
-                    "x": 800,
-                    "y": 200,
-                    "width": 300,         
-                    "rotationSpeed": 3000
-                },
-                {
-                    "type": "rotatingblade",
-                    "x": 200,
-                    "y": 300,
-                    "width": 200,
-                    "rotationSpeed": 1500
+                    "x": 640,
+                    "y": 360,
+                    "width": 700,
+                    "rotationSpeed": 6000
                 }
             ]
+        },
+        {
+            "id": 6,
+            "name": "Labyrinth",
+            "player": {
+                "x": 50,
+                "y": 50
+            },
+            "coins": [
+                {"x": 640, "y": 50},
+                {"x": 1230, "y": 150},
+                {"x": 1200, "y": 500},
+                {"x": 640, "y": 660},
+                {"x": 300, "y": 480},
+                {"x": 930, "y": 360},
+                {"x": 50, "y": 250}
+            ],
+            "obstacles": [
+                {"x": 250, "y": 150, "width": 500, "height": 60},
+                {"x": 950, "y": 150, "width": 300, "height": 60},
+                {"x": 1070, "y": 350, "width": 60, "height": 400},
+                {"x": 950, "y": 570, "width": 300, "height": 60},
+                {"x": 320, "y": 570, "width": 300, "height": 60},
+                {"x": 400, "y": 360, "width": 800, "height": 90}
+            ],
+            "traps": [
+                {"type": "spikeball", "x": 1150, "y": 150},
+                {"type": "rotatingblade", "x": 640, "y": 150, "width": 300, "rotationSpeed": 3000},
+                {"type": "rotatingblade", "x": 1070, "y": 360, "width": 400, "rotationSpeed": 3000},
+                {"type": "spikeball", "x": 1230, "y": 680},
+                {"type": "rotatingblade", "x": 640, "y": 570, "width": 300, "rotationSpeed": 3000},
+                {"type": "spikeball", "x": 100, "y": 570},
+                {"type": "spikeball", "x": 840, "y": 410},
+                {"type": "spikeball", "x": 840, "y": 310}
+            ]
         }
+
     ]
 }
