@@ -1,7 +1,7 @@
-// Storage.js
 class Storage {
     static PLAYED_LEVELS_KEY = 'mazerun_played_levels';
     static CURRENT_LEVEL_KEY = 'mazerun_current_level';
+    static LEVEL_COUNT_KEY = 'mazerun_level_count';  // New key for tracking sequential count
     
     /**
      * Get array of played level IDs
@@ -17,14 +17,32 @@ class Storage {
     }
 
     /**
-     * Save a level ID as played
+     * Get the sequential level number (1, 2, 3...)
+     */
+    static getLevelCount() {
+        try {
+            const count = localStorage.getItem(this.LEVEL_COUNT_KEY);
+            return count ? parseInt(count) : 1;  // Default to 1 if no count saved
+        } catch (error) {
+            console.error('Error getting level count:', error);
+            return 1;
+        }
+    }
+
+    /**
+     * Save a level ID as played and increment the level count
      */
     static addPlayedLevel(levelId) {
         try {
+            // Save the played level ID
             const played = this.getPlayedLevels();
             if (!played.includes(levelId)) {
                 played.push(levelId);
                 localStorage.setItem(this.PLAYED_LEVELS_KEY, JSON.stringify(played));
+                
+                // Increment the sequential level count
+                const currentCount = this.getLevelCount();
+                localStorage.setItem(this.LEVEL_COUNT_KEY, (currentCount + 1).toString());
             }
         } catch (error) {
             console.error('Error saving played level:', error);
@@ -32,7 +50,7 @@ class Storage {
     }
 
     /**
-     * Save the current level
+     * Save the current level ID (internal use)
      */
     static saveCurrentLevel(levelId) {
         try {
@@ -43,12 +61,12 @@ class Storage {
     }
 
     /**
-     * Get the current level
+     * Get the current level ID (internal use)
      */
     static getCurrentLevel() {
         try {
             const level = localStorage.getItem(this.CURRENT_LEVEL_KEY);
-            return level ? parseInt(level) : 1;  // Default to level 1 if none saved
+            return level ? parseInt(level) : 1;
         } catch (error) {
             console.error('Error getting current level:', error);
             return 1;
@@ -62,6 +80,7 @@ class Storage {
         try {
             localStorage.removeItem(this.PLAYED_LEVELS_KEY);
             localStorage.removeItem(this.CURRENT_LEVEL_KEY);
+            localStorage.removeItem(this.LEVEL_COUNT_KEY);
         } catch (error) {
             console.error('Error clearing progress:', error);
         }

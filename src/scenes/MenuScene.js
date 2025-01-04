@@ -14,8 +14,8 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Create continue or start text based on saved progress
-        const currentLevel = Storage.getCurrentLevel();
-        const startText = currentLevel > 1 ? `Continue (Level ${currentLevel})` : 'Start Game';
+        const levelCount = Storage.getLevelCount();
+        const startText = levelCount > 1 ? `Continue (Level ${levelCount})` : 'Start Game';
         
         const startButton = this.add.text(this.scale.width / 2, this.scale.height / 2, startText, {
             fontSize: '32px',
@@ -28,7 +28,7 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Add New Game button if there's saved progress
-        if (currentLevel > 1) {
+        if (levelCount > 1) {
             const newGameButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'New Game', {
                 fontSize: '32px',
                 fill: '#fff'
@@ -37,7 +37,10 @@ class MenuScene extends Phaser.Scene {
             newGameButton.setInteractive();
             newGameButton.on('pointerup', () => {
                 Storage.clearProgress();
-                this.scene.start('TransitionScene', { nextLevel: 4 });
+                this.scene.start('TransitionScene', { 
+                    nextLevel: 1,
+                    displayLevel: 1 
+                });
             });
 
             newGameButton.on('pointerover', () => {
@@ -53,7 +56,11 @@ class MenuScene extends Phaser.Scene {
 
         startButton.on('pointerup', () => {
             const levelToStart = Storage.getCurrentLevel();
-            this.scene.start('TransitionScene', { nextLevel: levelToStart });
+            const displayLevel = Storage.getLevelCount();
+            this.scene.start('TransitionScene', { 
+                nextLevel: levelToStart,
+                displayLevel: displayLevel 
+            });
         });
 
         instructionsButton.on('pointerup', () => {

@@ -1,3 +1,5 @@
+import Storage from '../utils/Storage.js';
+
 class TransitionScene extends Phaser.Scene {
     constructor() {
         super({ key: 'TransitionScene' });
@@ -5,7 +7,8 @@ class TransitionScene extends Phaser.Scene {
 
     init(data) {
         this.nextLevel = data.nextLevel;
-        console.log('TransitionScene received level:', this.nextLevel);
+        this.displayLevel = data.displayLevel || (Storage.getPlayedLevels().length + 1);
+        console.log('TransitionScene received level:', this.nextLevel, 'display level:', this.displayLevel);
     }
 
     create() {
@@ -23,7 +26,7 @@ class TransitionScene extends Phaser.Scene {
         const levelText = this.add.text(
             this.cameras.main.centerX,
             this.cameras.main.centerY,
-            `Level ${this.nextLevel}`,
+            `Level ${this.displayLevel}`,
             {
                 fontSize: '64px',
                 fill: '#fff',
@@ -50,7 +53,10 @@ class TransitionScene extends Phaser.Scene {
                         ease: 'Power2',
                         onComplete: () => {
                             // Start the next level
-                            this.scene.start('GameScene', { level: this.nextLevel });
+                            this.scene.start('GameScene', { 
+                                level: this.nextLevel,
+                                displayLevel: this.displayLevel 
+                            });
                         }
                     });
                 });
