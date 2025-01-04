@@ -28,6 +28,9 @@ class GameScene extends Phaser.Scene {
             score: 0,
             currentLevel: 1
         }
+
+        // Add particle manager
+        this.smokeEmitter = null;
     }
 
     preload() {
@@ -41,6 +44,7 @@ class GameScene extends Phaser.Scene {
 
         this.createScoreDisplay();
         this.setupGameObjects();
+        this.createSmokeEffect();
         this.setupEventListeners();
         this.setupGameMenu();
 
@@ -114,6 +118,33 @@ class GameScene extends Phaser.Scene {
         );
         this.scoreText.setScrollFactor(0);  // Fix to camera
         this.scoreText.setDepth(1000);      // Ensure it's always on top
+    }
+
+    createSmokeEffect() {
+        // Create a particle texture using graphics
+        const particleGraphics = this.add.graphics();
+        particleGraphics.fillStyle(0xaaaaaa, 1); // Light grey color
+        particleGraphics.fillCircle(4, 4, 4);    // Small circle for particle
+        
+        // Generate texture from the graphics
+        particleGraphics.generateTexture('smokeParticle', 8, 8);
+        particleGraphics.destroy();
+        
+        // Create the particles configuration
+        const particles = this.add.particles('smokeParticle');
+        
+        this.smokeEmitter = particles.createEmitter({
+            speed: { min: 50, max: 100 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 0.8, end: 0 },
+            alpha: { start: 0.6, end: 0 },
+            tint: [0xaaaaaa, 0x999999, 0x888888], // Varying shades of grey
+            lifespan: 500,
+            gravityY: -50,
+            quantity: 20,
+            blendMode: 'ADD',  // Makes particles blend together nicely
+            on: false // Don't start emitting right away
+        });
     }
 
     updateScore() {
@@ -197,12 +228,24 @@ class GameScene extends Phaser.Scene {
     }
 
     hitTrap(ball, traps) {
-        // You can add special effects here (particle effects, screen shake, etc.)
+        if (!this.levelLoader) return;
+        // Store current position for the smoke effect
+        const currentX = ball.x;
+        const currentY = ball.y;
+        
+        // Hide the ball temporarily
+        ball.setVisible(false);
+        
+        // Emit smoke particles at the collision point
+        if (this.smokeEmitter) {
+            this.smokeEmitter.setPosition(currentX, currentY);
+            this.smokeEmitter.explode();
+        }
+        
+        // Add screen shake
         this.cameras.main.shake(200, 0.01);
         
-        // Reset ball position just like with obstacles
-        if (!this.levelLoader) return;
-        
+        // Get respawn position
         const currentLevel = this.levelLoader.levelsData.levels.find(
             l => l.id === this.levelLoader.currentLevel
         );
@@ -210,11 +253,31 @@ class GameScene extends Phaser.Scene {
         if (currentLevel) {
             const relX = currentLevel.player.x / this.levelLoader.BASE_WIDTH;
             const relY = currentLevel.player.y / this.levelLoader.BASE_HEIGHT;
-            this.ball.setPosition(
-                this.gameWidth * relX,
-                this.gameHeight * relY
-            );
-            this.ball.body.setVelocity(0, 0);
+            
+            // Use a timer to delay the repositioning and reappearance
+            this.time.delayedCall(300, () => {
+                ball.setPosition(
+                    this.gameWidth * relX,
+                    this.gameHeight * relY
+                );
+                ball.body.setVelocity(0, 0);
+                
+                // Create a small puff of smoke at the respawn point
+                if (this.smokeEmitter) {
+                    this.smokeEmitter.setPosition(this.gameWidth * relX, this.gameHeight * relY);
+                    this.smokeEmitter.explode(10); // Smaller puff for respawn
+                }
+                
+                // Make the ball visible again with a fade effect
+                ball.setAlpha(0);
+                ball.setVisible(true);
+                this.tweens.add({
+                    targets: ball,
+                    alpha: 1,
+                    duration: 200,
+                    ease: 'Linear'
+                });
+            });
         }
     }
 
@@ -252,6 +315,11 @@ class GameScene extends Phaser.Scene {
         if (this.levelLoader) {
             this.levelLoader.clearLevel();
             this.levelLoader = null;
+        }
+
+        if(this.smokeEmitter){
+            this.smokeEmitter.stop();
+            this.smokeEmitter = null;
         }
 
         this.tweens.killAll();

@@ -37,7 +37,7 @@ class MenuScene extends Phaser.Scene {
             newGameButton.setInteractive();
             newGameButton.on('pointerup', () => {
                 Storage.clearProgress();
-                this.scene.start('TransitionScene', { nextLevel: 1 });
+                this.scene.start('TransitionScene', { nextLevel: 4 });
             });
 
             newGameButton.on('pointerover', () => {
