@@ -53,6 +53,8 @@ class InputController {
         // Add acceleration curve parameters
         this.minBoostThreshold = 15;   // Angle at which boost starts
         this.boostMultiplier = 2.5;    // How much extra force to apply during boost
+
+        this.wasdKeys = null
     }
 
     async setupControls() {
@@ -84,6 +86,13 @@ class InputController {
                 break;
             case 'keyboard':
                 this.cursors = this.scene.input.keyboard.createCursorKeys();
+                // Set up WASD keys
+                this.wasdKeys = {
+                    W: this.scene.input.keyboard.addKey('W'),
+                    A: this.scene.input.keyboard.addKey('A'),
+                    S: this.scene.input.keyboard.addKey('S'),
+                    D: this.scene.input.keyboard.addKey('D')
+                };
                 break;
         }
     }
@@ -96,6 +105,15 @@ class InputController {
             this.cursors.left.reset();
             this.cursors.right.reset();
             this.cursors = null;
+        }
+
+        // Cleanup WASD keys
+        if (this.wasdKeys) {
+            this.wasdKeys.W.reset();
+            this.wasdKeys.A.reset();
+            this.wasdKeys.S.reset();
+            this.wasdKeys.D.reset();
+            this.wasdKeys = null;
         }
 
         // Cleanup gyroscope
@@ -237,11 +255,22 @@ class InputController {
             y: 0
         };
 
-        if (this.cursors.left.isDown) targetForce.x = -this.forceMultiplier;
-        else if (this.cursors.right.isDown) targetForce.x = this.forceMultiplier;
+        // Check arrow keys
+        if (this.cursors) {
+            if (this.cursors.left.isDown || (this.wasdKeys && this.wasdKeys.A.isDown)) {
+                targetForce.x = -this.forceMultiplier;
+            }
+            else if (this.cursors.right.isDown || (this.wasdKeys && this.wasdKeys.D.isDown)) {
+                targetForce.x = this.forceMultiplier;
+            }
 
-        if (this.cursors.up.isDown) targetForce.y = -this.forceMultiplier;
-        else if (this.cursors.down.isDown) targetForce.y = this.forceMultiplier;
+            if (this.cursors.up.isDown || (this.wasdKeys && this.wasdKeys.W.isDown)) {
+                targetForce.y = -this.forceMultiplier;
+            }
+            else if (this.cursors.down.isDown || (this.wasdKeys && this.wasdKeys.S.isDown)) {
+                targetForce.y = this.forceMultiplier;
+            }
+        }
 
         // Smoothly interpolate current force towards target force
         this.currentForce.x = this.interpolateForce(this.currentForce.x, targetForce.x);
