@@ -22,20 +22,20 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 // Handle install button click
-const installButton = document.getElementById('install-button');
-if (installButton) {
-    installButton.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const result = await deferredPrompt.userChoice;
-            if (result.outcome === 'accepted') {
-                console.log('Game installed as PWA');
-            }
-            deferredPrompt = null;
-            installButton.style.display = 'none';
-        }
-    });
-}
+// const installButton = document.getElementById('install-button');
+// if (installButton) {
+//     installButton.addEventListener('click', async () => {
+//         if (deferredPrompt) {
+//             deferredPrompt.prompt();
+//             const result = await deferredPrompt.userChoice;
+//             if (result.outcome === 'accepted') {
+//                 console.log('Game installed as PWA');
+//             }
+//             deferredPrompt = null;
+//             installButton.style.display = 'none';
+//         }
+//     });
+// }
 
 // Handle screen orientation
 window.addEventListener('load', () => {

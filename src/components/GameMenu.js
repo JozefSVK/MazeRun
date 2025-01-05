@@ -2,8 +2,8 @@ const GameMenu = () => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isHintOpen, setIsHintOpen] = React.useState(false);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const hasGyroscope = window.DeviceOrientationEvent;
 
+    const hasGyroscope = window.DeviceOrientationEvent;
     const [controlType, setControlType] = React.useState(() => {
         const savedControl = localStorage.getItem('controlType');
         if (isMobile && hasGyroscope) {
@@ -18,6 +18,13 @@ const GameMenu = () => {
             detail: { controlType: controlType } 
         }));
     }, [controlType]);
+
+    // Trigger control type event on component mount
+    React.useEffect(() => {
+        window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
+            detail: { controlType: controlType } 
+        }));
+    }, []); // Empty dependency array means this runs once on mount
 
     React.useEffect(() => {
         return () => {
@@ -37,6 +44,11 @@ const GameMenu = () => {
 
     const toggleHint = () => {
         setIsHintOpen(!isHintOpen);
+        if (!isHintOpen) {
+            window.gameControls?.pauseGame();
+        } else {
+            window.gameControls?.resumeGame();
+        }
     };
 
     const handleQuit = () => {
@@ -97,46 +109,17 @@ const GameMenu = () => {
                     key: "menu-title"
                 }, "Game Menu"),
 
-                React.createElement("h3", {
-                    className: "text-2xl text-white mb-4 text-center",
-                    key: "controls-title"
-                }, "Controls"),
+                // Only show controls section on desktop
+                !isMobile && [
+                    React.createElement("h3", {
+                        className: "text-2xl text-white mb-4 text-center",
+                        key: "controls-title"
+                    }, "Controls"),
 
-                // Desktop/Mobile Controls
-                React.createElement("div", {
-                    className: "flex justify-center gap-8 mb-6",
-                    key: "controls-container"
-                },
-                    isMobile ? [
-                        hasGyroscope && React.createElement("button", {
-                            onClick: () => handleControlChange('gyroscope'),
-                            className: `${controlButtonClasses} ${controlType === 'gyroscope' ? 'bg-yellow-300 bg-opacity-20 border-yellow-300 text-yellow-300' : 'border-white'}`,
-                            key: "gyroscope"
-                        }, [
-                            React.createElement("i", { 
-                                className: "fas fa-mobile-alt text-3xl mb-2",
-                                key: "gyro-icon"
-                            }),
-                            React.createElement("span", { 
-                                className: "text-sm",
-                                key: "gyro-text"
-                            }, "Gyroscope")
-                        ]),
-                        React.createElement("button", {
-                            onClick: () => handleControlChange('touch'),
-                            className: `${controlButtonClasses} ${controlType === 'touch' ? 'bg-yellow-300 bg-opacity-20 border-yellow-300 text-yellow-300' : 'border-white'}`,
-                            key: "touch"
-                        }, [
-                            React.createElement("i", { 
-                                className: "fas fa-gamepad text-3xl mb-2",
-                                key: "touch-icon"
-                            }),
-                            React.createElement("span", { 
-                                className: "text-sm",
-                                key: "touch-text"
-                            }, "Touch")
-                        ])
-                    ] : [
+                    React.createElement("div", {
+                        className: "flex justify-center gap-8 mb-6",
+                        key: "controls-container"
+                    }, [
                         React.createElement("button", {
                             onClick: () => handleControlChange('keyboard'),
                             className: `${controlButtonClasses} ${controlType === 'keyboard' ? 'bg-yellow-300 bg-opacity-20 border-yellow-300 text-yellow-300' : 'border-white'}`,
@@ -165,13 +148,13 @@ const GameMenu = () => {
                                 key: "mouse-text"
                             }, "Mouse")
                         ])
-                    ]
-                ),
+                    ]),
 
-                React.createElement("hr", {
-                    className: "my-6 border-gray-600",
-                    key: "divider"
-                }),
+                    React.createElement("hr", {
+                        className: "my-6 border-gray-600",
+                        key: "divider"
+                    })
+                ],
 
                 React.createElement("button", {
                     onClick: toggleMenu,
@@ -213,8 +196,8 @@ const GameMenu = () => {
                     React.createElement("p", {
                         className: "text-center",
                         key: "hint-2"
-                    }, "Avoid traps"),
-                    React.createElement("p", {
+                    }, "Avoid traps and obstacles"),
+                    !isMobile && React.createElement("p", {
                         className: "text-center",
                         key: "hint-3"
                     }, "Use the controls menu to change input method")
