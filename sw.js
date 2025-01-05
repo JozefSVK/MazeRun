@@ -23,6 +23,10 @@ const urlsToCache = [
     './assets/icons/icon-512x512.png',
     './src/entities/rotatingBlade.js',
     './src/entities/spikeball.js',
+    './assets/icons/gear.png',
+    './assets/icons/question.png',
+    './assets/icons/keyboard.png',
+    './assets/icons/mouse.png'
 ];
 
 const externalUrls = [

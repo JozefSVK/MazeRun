@@ -19,12 +19,11 @@ const GameMenu = () => {
         }));
     }, [controlType]);
 
-    // Trigger control type event on component mount
     React.useEffect(() => {
         window.dispatchEvent(new CustomEvent('controlTypeChanged', { 
             detail: { controlType: controlType } 
         }));
-    }, []); // Empty dependency array means this runs once on mount
+    }, []);
 
     React.useEffect(() => {
         return () => {
@@ -66,10 +65,9 @@ const GameMenu = () => {
         setControlType(newControl);
     };
 
-    // Common button style classes
     const actionButtonClasses = "transition-colors duration-200 hover:text-yellow-300 text-white text-2xl py-2 px-4 rounded text-center mb-4 border-2 border-white hover:border-yellow-300";
     const controlButtonClasses = "flex flex-col items-center p-4 rounded-lg transition-colors border-2 hover:border-yellow-300 hover:text-yellow-300 text-white";
-    const iconButtonClasses = "absolute w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors z-50 text-white";
+    const iconButtonClasses = "absolute w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors z-50 text-white overflow-hidden";
 
     return React.createElement("div", null, [
         // Gear icon button
@@ -78,8 +76,10 @@ const GameMenu = () => {
             className: `${iconButtonClasses} top-4 right-4`,
             key: "gear-button"
         }, 
-            React.createElement("i", { 
-                className: "fas fa-gear text-xl"
+            React.createElement("img", {
+                src: "./assets/icons/gear.png",
+                alt: "Settings",
+                className: "w-6 h-6 object-contain"
             })
         ),
         
@@ -89,8 +89,10 @@ const GameMenu = () => {
             className: `${iconButtonClasses} top-20 right-4`,
             key: "hint-button"
         }, 
-            React.createElement("i", { 
-                className: "fas fa-question text-xl"
+            React.createElement("img", {
+                src: "./assets/icons/question.png",
+                alt: "Help",
+                className: "w-6 h-6 object-contain"
             })
         ),
 
@@ -109,7 +111,6 @@ const GameMenu = () => {
                     key: "menu-title"
                 }, "Game Menu"),
 
-                // Only show controls section on desktop
                 !isMobile && [
                     React.createElement("h3", {
                         className: "text-2xl text-white mb-4 text-center",
@@ -125,10 +126,16 @@ const GameMenu = () => {
                             className: `${controlButtonClasses} ${controlType === 'keyboard' ? 'bg-yellow-300 bg-opacity-20 border-yellow-300 text-yellow-300' : 'border-white'}`,
                             key: "keyboard"
                         }, [
-                            React.createElement("i", { 
-                                className: "fas fa-keyboard text-3xl mb-2",
-                                key: "keyboard-icon"
-                            }),
+                            React.createElement("div", {
+                                className: "w-8 h-8 mb-2 flex items-center justify-center",
+                                key: "keyboard-icon-container"
+                            },
+                                React.createElement("img", {
+                                    src: "./assets/icons/keyboard.png",
+                                    alt: "Keyboard",
+                                    className: "w-6 h-6 object-contain"
+                                })
+                            ),
                             React.createElement("span", { 
                                 className: "text-sm",
                                 key: "keyboard-text"
@@ -139,10 +146,16 @@ const GameMenu = () => {
                             className: `${controlButtonClasses} ${controlType === 'mouse' ? 'bg-yellow-300 bg-opacity-20 border-yellow-300 text-yellow-300' : 'border-white'}`,
                             key: "mouse"
                         }, [
-                            React.createElement("i", { 
-                                className: "fas fa-mouse text-3xl mb-2",
-                                key: "mouse-icon"
-                            }),
+                            React.createElement("div", {
+                                className: "w-8 h-8 mb-2 flex items-center justify-center",
+                                key: "mouse-icon-container"
+                            },
+                                React.createElement("img", {
+                                    src: "./assets/icons/mouse.png",
+                                    alt: "Mouse",
+                                    className: "w-6 h-6 object-contain"
+                                })
+                            ),
                             React.createElement("span", { 
                                 className: "text-sm",
                                 key: "mouse-text"
