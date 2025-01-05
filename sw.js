@@ -64,61 +64,39 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
-            .then(response => {
+            .then(async response => {
+                // Return cached response if found
                 if (response) {
-                    // For JS files, always add correct headers
-                    if (event.request.url.endsWith('.js')) {
-                        return new Response(response.body, {
-                            headers: new Headers({
-                                'Content-Type': 'application/javascript; charset=utf-8'
-                            }),
-                            status: response.status,
-                            statusText: response.statusText
-                        });
-                    }
                     return response;
                 }
 
-                const fetchRequest = event.request.clone();
-                return fetch(fetchRequest)
-                    .then(response => {
-                        if (!response || response.status !== 200) {
-                            return response;
-                        }
+                try {
+                    // Clone the request in case we need to use it twice
+                    const fetchRequest = event.request.clone();
+                    const networkResponse = await fetch(fetchRequest);
+                    
+                    // Check if we received a valid response
+                    if (!networkResponse || networkResponse.status !== 200) {
+                        return networkResponse;
+                    }
 
-                        const responseToCache = response.clone();
+                    // Clone the response before caching it
+                    const responseToCache = networkResponse.clone();
+                    
+                    // Cache the response
+                    const cache = await caches.open(CACHE_NAME);
+                    await cache.put(event.request, responseToCache);
+                    
+                    return networkResponse;
+                } catch (error) {
+                    console.error('Fetch failed:', error);
+                    
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
 
-                        // Force correct headers for JS files
-                        if (event.request.url.endsWith('.js')) {
-                            const modifiedResponse = new Response(responseToCache.body, {
-                                headers: new Headers({
-                                    'Content-Type': 'application/javascript; charset=utf-8'
-                                }),
-                                status: responseToCache.status,
-                                statusText: responseToCache.statusText
-                            });
-                            
-                            caches.open(CACHE_NAME).then(cache => {
-                                cache.put(event.request, modifiedResponse.clone());
-                            });
-                            
-                            return modifiedResponse;
-                        }
-
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                if (!event.request.url.includes('cdn.tailwindcss.com')) {
-                                    cache.put(event.request, responseToCache);
-                                }
-                            });
-
-                        return response;
-                    })
-                    .catch(() => {
-                        if (event.request.mode === 'navigate') {
-                            return caches.match('./index.html');
-                        }
-                    });
+                    throw error;
+                }
             })
     );
 });
