@@ -137,7 +137,7 @@ class RotatingBlade extends Phaser.GameObjects.Container {
 
         // Apply 50% speed reduction on mobile
         const adjustedSpeed = isMobile ? rotationSpeed * 2 : rotationSpeed;
-        this.rotationSpeed = (Math.PI * 2) / (adjustedSpeed / 1000 * 60);
+        this.rotationSpeed = (Math.PI * 2) / (rotationSpeed / 1000 * 60);
         
         // Calculate dimensions
         const halfWidth = width / 2;

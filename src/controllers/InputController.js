@@ -194,30 +194,46 @@ class InputController {
             let x = Math.abs(this.gyroValues.x) < this.gyroThreshold ? 0 : this.gyroValues.x;
             let y = Math.abs(this.gyroValues.y) < this.gyroThreshold ? 0 : this.gyroValues.y;
 
-            // Calculate boost based on tilt angle
-            const xBoost = Math.abs(x) > this.minBoostThreshold ? this.boostMultiplier : 1;
-            const yBoost = Math.abs(y) > this.minBoostThreshold ? this.boostMultiplier : 1;
+            // // Calculate boost based on tilt angle
+            // const xBoost = Math.abs(x) > this.minBoostThreshold ? this.boostMultiplier : 1;
+            // const yBoost = Math.abs(y) > this.minBoostThreshold ? this.boostMultiplier : 1;
 
-            // Apply non-linear acceleration curve
-            x = Math.sign(x) * Math.pow(Math.abs(x) / this.maxGyroAngle, 1.5) * xBoost;
-            y = Math.sign(y) * Math.pow(Math.abs(y) / this.maxGyroAngle, 1.5) * yBoost;
+            // // Apply non-linear acceleration curve
+            // x = Math.sign(x) * Math.pow(Math.abs(x) / this.maxGyroAngle, 1.5) * xBoost;
+            // y = Math.sign(y) * Math.pow(Math.abs(y) / this.maxGyroAngle, 1.5) * yBoost;
 
-            // Apply force with boosted values
-            const force = {
-                x: y * this.gyroForceMultiplier,
-                y: x * this.gyroForceMultiplier
+            // // Apply force with boosted values
+            // const force = {
+            //     x: y * this.gyroForceMultiplier,
+            //     y: x * this.gyroForceMultiplier
+            // };
+
+            // // Apply additional boost for quick movements
+            // if (Math.abs(rawX - this.gyroValues.x) > 10 || Math.abs(rawY - this.gyroValues.y) > 10) {
+            //     force.x *= 1.5;
+            //     force.y *= 1.5;
+            // }
+
+            // Calculate velocity based on tilt angle
+            const maxSpeed = 15; // Adjust this value to control maximum speed
+            
+            // Non-linear response curve for better control
+            const getVelocityComponent = (tilt) => {
+                const normalizedTilt = tilt / this.maxGyroAngle;
+                const curve = Math.sign(normalizedTilt) * Math.pow(Math.abs(normalizedTilt), 1.5);
+                return curve * maxSpeed;
             };
 
-            // Apply additional boost for quick movements
-            if (Math.abs(rawX - this.gyroValues.x) > 10 || Math.abs(rawY - this.gyroValues.y) > 10) {
-                force.x *= 1.5;
-                force.y *= 1.5;
-            }
+            const velocityX = getVelocityComponent(y);
+            const velocityY = getVelocityComponent(x);
+
+             // Set velocity directly
+            this.player.setVelocity(velocityX, velocityY);
 
             // Only apply force if it's significant enough
-            if (Math.abs(force.x) > 0.00001 || Math.abs(force.y) > 0.00001) {
-                this.player.applyForce(force);
-            }
+            // if (Math.abs(force.x) > 0.00001 || Math.abs(force.y) > 0.00001) {
+            //     this.player.applyForce(force);
+            // }
         }
     }
 
