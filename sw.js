@@ -2,41 +2,33 @@ const CACHE_NAME = 'maze-runner-v1';
 const urlsToCache = [
     './',  // Changed from '/'
     './index.html',  // Changed from '/index.html'
+    './instructions.html',
     './game.js',
     './manifest.json',
     './register-sw.js',
-    // Scenes
+    // Game modules
     './src/scenes/GameScene.js',
     './src/scenes/MenuScene.js',
-    './src/scenes/InstructionsScene.js',
     './src/scenes/TransitionScene.js',
     './src/scenes/EndScene.js',
-    // Components
     './src/components/GameMenu.js',
-    // Controllers
-    './src/controllers/InputController.js',
-    // Entities
     './src/entities/Coin.js',
-    './src/entities/Obstacle.js',
     './src/entities/Player.js',
-    './src/entities/Traps.js',
-    // Utils
     './src/utils/LevelLoader.js',
     './src/utils/Storage.js',
-    // Styles
     './css/style.css',
     './css/instructions.css',
-    // Data
-    './data/config.json',
     './data/levels.json',
-    // Assets
     './assets/icons/icon-192x192.png',
     './assets/icons/icon-512x512.png',
-    // External Resources
+    './src/entities/rotatingBlade.js',
+    './src/entities/spikeball.js',
+];
+
+const externalUrls = [
     'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js',
     'https://unpkg.com/react@18/umd/react.production.min.js',
     'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-    'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
 ];
 
@@ -44,65 +36,85 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache).catch(error => {
-                    console.error('Cache addAll failed:', error);
-                    throw error;
-                });
+                // First cache local files
+                return cache.addAll(urlsToCache)
+                    .then(() => {
+                        // Then try to cache external files individually
+                        return Promise.allSettled(
+                            externalUrls.map(url =>
+                                fetch(url)
+                                    .then(response => {
+                                        if (response.ok) {
+                                            return cache.put(url, response);
+                                        }
+                                        throw new Error(`Failed to fetch ${url}`);
+                                    })
+                                    .catch(error => console.warn('Could not cache:', url, error))
+                            )
+                        );
+                    });
             })
     );
 });
 
 self.addEventListener('fetch', event => {
-    // Handle navigation requests separately
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request)
-                .catch(() => caches.match('index.html'))
-        );
-        return;
-    }
-
     event.respondWith(
         caches.match(event.request)
-            .then(async response => {
-                // Return cached response if found
+            .then(response => {
                 if (response) {
+                    // For JS files, always add correct headers
+                    if (event.request.url.endsWith('.js')) {
+                        return new Response(response.body, {
+                            headers: new Headers({
+                                'Content-Type': 'application/javascript; charset=utf-8'
+                            }),
+                            status: response.status,
+                            statusText: response.statusText
+                        });
+                    }
                     return response;
                 }
 
-                try {
-                    const fetchResponse = await fetch(event.request);
-                    
-                    // Check if we received a valid response
-                    if (!fetchResponse || fetchResponse.status !== 200) {
-                        return fetchResponse;
-                    }
+                const fetchRequest = event.request.clone();
+                return fetch(fetchRequest)
+                    .then(response => {
+                        if (!response || response.status !== 200) {
+                            return response;
+                        }
 
-                    // Clone the response
-                    const responseToCache = fetchResponse.clone();
+                        const responseToCache = response.clone();
 
-                    // Cache the fetched response
-                    const cache = await caches.open(CACHE_NAME);
-                    if (!event.request.url.includes('cdn.tailwindcss.com')) {
-                        cache.put(event.request, responseToCache);
-                    }
+                        // Force correct headers for JS files
+                        if (event.request.url.endsWith('.js')) {
+                            const modifiedResponse = new Response(responseToCache.body, {
+                                headers: new Headers({
+                                    'Content-Type': 'application/javascript; charset=utf-8'
+                                }),
+                                status: responseToCache.status,
+                                statusText: responseToCache.statusText
+                            });
+                            
+                            caches.open(CACHE_NAME).then(cache => {
+                                cache.put(event.request, modifiedResponse.clone());
+                            });
+                            
+                            return modifiedResponse;
+                        }
 
-                    return fetchResponse;
-                } catch (error) {
-                    console.error('Fetch failed:', error);
-                    
-                    // Return appropriate fallback
-                    if (event.request.url.match(/\.(jpg|png|gif|svg)$/)) {
-                        return caches.match('/assets/icons/icon-192x192.png');
-                    }
-                    return new Response('Network error occurred', {
-                        status: 408,
-                        headers: new Headers({
-                            'Content-Type': 'text/plain'
-                        })
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                if (!event.request.url.includes('cdn.tailwindcss.com')) {
+                                    cache.put(event.request, responseToCache);
+                                }
+                            });
+
+                        return response;
+                    })
+                    .catch(() => {
+                        if (event.request.mode === 'navigate') {
+                            return caches.match('./index.html');
+                        }
                     });
-                }
             })
     );
 });

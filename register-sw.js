@@ -2,7 +2,9 @@
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
-            const registration = await navigator.serviceWorker.register('/sw.js');
+            const registration = await navigator.serviceWorker.register('./sw.js', {
+                scope: './' // Explicitly set scope to current directory
+            });
             console.log('ServiceWorker registration successful:', registration);
         } catch (error) {
             console.log('ServiceWorker registration failed:', error);

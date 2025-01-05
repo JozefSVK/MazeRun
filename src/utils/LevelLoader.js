@@ -1,7 +1,15 @@
 import Coin from "../entities/Coin.js"
 import Player from "../entities/Player.js";
 import Storage from '../utils/Storage.js';
-import { SpikeBall, RotatingBlade, CollisionCategories } from "../entities/traps.js"; 
+import RotatingBlade from "../entities/rotatingBlade.js";
+import SpikeBall from "../entities/spikeball.js";
+
+const CollisionCategories = {
+    PLAYER: 0x0001,
+    TRAP: 0x0002,
+    COIN: 0x0004,
+    OBSTACLE: 0x0008
+};
 
 class LevelLoader {
     constructor(scene) {
