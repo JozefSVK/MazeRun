@@ -66,10 +66,9 @@ body {
     padding: 20px;
 }
 
-#rotation-message i {
-    font-size: 48px;
-    margin-bottom: 15px;
-    color: #ffff00;
+#rotation-image {
+    filter: brightness(0) invert(1) sepia(1) saturate(1000%) hue-rotate(50deg);
+    width: 100px; /* Adjust size as needed */
 }
 
 /* Only show rotation message in portrait mode */
